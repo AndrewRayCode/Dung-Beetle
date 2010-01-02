@@ -27,7 +27,15 @@ Known Bugs:
 - Opera does not display cursor styles - like resize cursor when over the 
 	resize area of dung beetle
 - Opera scrollbar covers button
+- Re-inspecting loses cancelled classes and styles, need to save? (this is an old comment I wrote down, might need to investigate more)
+- Comma separated CSS values are not found
+- Selected element in DOM -> edit node of another -> DOM does not select new node
+- IDs don't show up in DOM 
+- IE img tag has no attributes
+- IE makes border:0 into border-left,right, etc. Mapping for fix?
+- curent_element is null if edit DOM node right out of the box (?)
 
 Things to implement:
 - up / down keyboard arrow pixel nudging, like firebug does
+- minimize button
 
