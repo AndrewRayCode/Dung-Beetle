@@ -1,0 +1,33 @@
+----------------------------------------------------------
+DUNG BEETLE by Andrew Ray
+I'm not sure what kind of license to give this yet.
+----------------------------------------------------------
+
+Overview:
+Dung Beetle is a Firebug knockoff designed to give powerful cross browser
+CSS and JavaScript inspecting / debugging / editing capabilities. This is
+a long overdue niche that I am attempting to fill. Firebug Lite is broken
+and unusuable, Opera Dragonfly frankly sucks, and IE has nothing. Dung
+Beetle works in ALL of those browsers. Want to edit your CSS in IE6? Dung
+Beetle lets you do that exactly like Firebug does. Need console.log? No
+problem, we've got it. And a whole host of other amazing features.
+
+General Information: 
+- There is no simple way CURRENTLY to use this repository. The index.html
+	code is coupled with the dung-beetle.js code. If you want to use it
+	put everything from dung-core and html into the same folder and launch
+	index.html. ALTERNATIVELY you can see this beast in action at:
+	http://andrewray.me/dung-beetle/index.html 
+- All of the magic is in dung-core/dung-beetle.js.
+- The code is a disaster. Can you say polluted namespace?
+- Refactoring next step: Convert this all to MooTool's graceful class
+	structure.
+
+Known Bugs:
+- Opera does not display cursor styles - like resize cursor when over the 
+	resize area of dung beetle
+- Opera scrollbar covers button
+
+Things to implement:
+- up / down keyboard arrow pixel nudging, like firebug does
+

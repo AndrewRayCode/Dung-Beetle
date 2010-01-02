@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Dung-Beetle - A Javascript based DOM+CSS editor and inspector for any browser</title>
+	<script language="JavaScript" type="text/javascript" src="moocore.js"></script>
+	<script language="JavaScript" type="text/javascript" src="moomore.js"></script>
+	<script language="JavaScript" type="text/javascript" src="dung-beetle.js"></script>
+	<link rel="stylesheet" type="text/css" href="dung-beetle.css" />
+</head>
+<body>
+	<div class="wrapper">
+		<div class="header">
+			<h1>Dung Beetle</h1><h2>A JavaScript based DOM+CSSeditor and inspector for ANY browser</h2>
+		</div>
+		<div class="content" style="border:0 none; ">
+			<div class="tr"></div>
+			<div class="tl"></div>
+			<div class="bl"></div>
+			<div class="br"></div>
+			<img src="beetle_ss.jpg" align="right" class="screenshot" />
+			<h3 class="top" id="hi">Try it out!</h3>
+			<input type="button" value="Stop Dung Beetle Demo" id="inspect" />
+			
+			<h3>What is Dung Beetle?</h3>
+			<p>Dung Beetle is a <b>web development application</b> built in JavaScript that enables the user to view the DOM and CSS of any webpage and edit them in real time. It was initially created as an alternative to <a href="https://addons.mozilla.org/en-US/firefox/addon/1843">Firebug</a>, a powerful web-dev toolkit for FireFox. The name "Dung Beetle" is a parody of "<a href="https://addons.mozilla.org/en-US/firefox/addon/1843">Firebug</a>," as well as "<a href="http://www.opera.com/products/dragonfly/">Dragonfly</a>," the Opera browser toolkit.<br /><br />Dung currently supports the following functionality:</p>
+			<ul>
+				<li>Live DOM view and inspection</li>
+				<li>DOM attribute and HTML editing</li>
+				<li>Live CSS view*</li>
+				<li>CSS editing</li>
+				<li>Provides console functions like console.log and console.error</li>
+			</ul>
+			<p><i>* CSS editing is not perfect, but close. It does not read the actual CSS file; rather it makes very educated guesses based on available information.</i></p>
+			<h3>What <i>isn't</i> Dung Beetle?</h3>
+			<ul>
+				<li>Not a JavaScript runtime debugger (unfortunately). It is built with pure JavaScript, and you can't debug JavaScript with external JavaScript.</li>
+				<li>Does not currently support complete DOM view, eg it doesn't relay information about DOM node events and functions such as 'onclick' and 'children'. Editing and viewing is only extended to what you normally would see with "view source."</li>
+			</ul>
+			<h3>What about Dragonfly/IE Developer Toolbar/Firebug lite/etc?</h3>
+			<p>It's true that there are many Firebug-like applications out there for different browsers. But if these alternatives were perfect then Dung Beetle wouldn't be under development. It is the opinion of the creator that despite the already existing toolkits, there could be something better for non-Firefox browsers. Besides, nothing wrong with another choice, right?</p>
+		</div>
+	</div>
+</body>
+</html>
