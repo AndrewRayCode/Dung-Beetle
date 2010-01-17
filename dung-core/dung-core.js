@@ -96,68 +96,81 @@ var dung_beetle = {
 			this.dung = dung_beetle;
 			this.jq = this.dung.jq;
 			this.mode = this.MODES.INSET;
+			this.max_objects = 4;
+
+			this.elements.console = this.jq('<div></div>').attr('class', 'dung_console').appendTo(this.dung.elements.dung_beetle);
 			this.elements.buttons = this.jq('<div></div>')
 				.html('<span class="dung_execute">Execute</span><span class="dung_clear">Clear</span>')
 				.attr('class', 'buttons').appendTo(where);
 			this.elements.input = this.jq('<textarea></textarea>').appendTo(this.dung.elements.dung_beetle);
 			this.elements.input.bind('keyup', this.dung.bind(this.keyEvent, this));
 
-			if(!console) {
-				try {
-					console = this;
-				} catch(e) {
-					console.warn('Could not override console, Dung Beetle may explode');
-				}
+			try {
+				console = this;
+			} catch(e) {
+				this.dung.merge(console, this);
 			}
-			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 
 			this.history_position = 0;
+			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
+			console.log('Dung Beetle:', dung_beetle);
 		},
 		log: function() {
 			var str = '<div class="console_response">';
 			for(var x=0, l=arguments.length; x<l; x++) {
+				console.warn('logging ',arguments[x]);
 				str += this.formatObject(arguments[x])+' ';
 			}
-			this.elements.console.innerHTML += str+'&nbsp;</div>';
+			this.elements.console.html(this.elements.console.html() + str+'&nbsp;</div>');
 			//new Fx.Scroll(dung_console, {'duration':0}).toBottom(); //TODO: Portme
 		},
 		error: function() {
 			this.elements.console.innerHTML += '<div class="console_response"><span class="dung_error">'+this.formatObject(obj)+'</span></div>';
 			// new Fx.Scroll(dung_console, {'duration':0}).toBottom() //TODO: Portme
 		},
-		warn: function() {
+		warm: function() {
 
 		},
 		keyEvent: function(e) {
 			// take from consoleKeyEvent
 		},
 		// Recursive function to format an object for display in the console
-		formatObject: function(obj) {
+		formatObject: function(obj, depth) {
+			depth = (depth || 0) + 1;
 			var str = '';
-			var type = (typeof obj).toLowerCase(); //neccessary?
+			var type = this.dung.type(obj);
+			console.warn(type);
 			if(type == 'string' ) {
 				str += '"<span class="dung_string">'+obj+'</span>"';
-			} else if(type == 'number' || type == 'boolean' || type == 'function') {
+			} else if(type == 'number' || type == 'boolean') {
 				str += '<span class="dung_'+type+'">'+obj+'</span>';
 			} else if(type == 'array') {
 				str += '[';
 				for(var x=0; x<obj.length; x++) {
-					str += this.formatObject(obj[x])+', ';
+					str += this.formatObject(obj[x], depth)+', ';
 				}
-				str = str.substring(0, str.length-2)+']';
+				str = str.substring(0, str.length-2)+'] ';
 			} else if(type == 'object') {
-				str += '{';
-				for(var x in obj) {
-					str += '<span class="dung_string">'+x+'</span>:'+this.formatObject(obj[x])+', ';
+				var i = 0;
+				var formats = [];
+				if(depth == 1) {
+					for(var x in obj) {
+						if(i++ >= this.max_objects) break;
+						formats.push(x+'</span>='+this.formatObject(obj[x], depth));
+					}
+					str = '<span class="dung_obj_lbl">Object '+formats.join(' <span class="dung_obj_lbl">');
+				} else {
+					str += '<span class="dung_obj_lbl dung_sub_obj">Object</span>';
 				}
-				str = str.substring(0, str.length-2)+'}';
 			} else if(type == 'element') {
-				var attrs = getElementAttributes(obj);
+				var attrs = this.dung.getElementAttributes(obj);
 				str += '[<span class="dung_element">HTML '+obj.nodeName.toLowerCase()+'</span>'+(attrs.length >0 ? ':{' : '');
 				for(var x=0; x<attrs.length; x++) {
 					str += '<span class="dung_string">'+attrs[x].nodeName+'</span>="<span class="dung_string">'+attrs[x].nodeValue+'</span>", ';
 				}
-				str = (attrs.length >0 ? str.substring(0, str.length-2)+'}' : str)+']';
+				str = (attrs.length >0 ? str.substring(0, str.length-2)+'}' : str)+'] ';
+			} else if(type == 'function'){
+				str += '<span class="dung_function">function()</span>';
 			} else {
 				str += '<span class="dung_other">'+obj+'</span>';
 			}
@@ -337,6 +350,49 @@ var dung_beetle = {
 		if(this.dungstatus.color_hover) {
 			this.elements.color_hover.css({'left':(this.input.mouse.x+9)+'px', 'top':(this.input.mouse.y+9)+'px'});
 		}
+	},
+	// Stolen verbatim from MooTools
+	type: function(obj){
+		if (obj == undefined) return 'undefined';
+		if (obj === null) return 'null';
+		if (typeof obj.length == 'number' && typeof obj.push == 'function') return 'array';
+		if (obj.nodeName){
+			switch (obj.nodeType){
+				case 1: return 'element';
+				case 3: return (/\S/).test(obj.nodeValue) ? 'textnode' : 'whitespace';
+			}
+		} else if (typeof obj.length == 'number'){
+			if (obj.callee) return 'arguments';
+			else if (obj.item) return 'collection';
+		}
+		return typeof obj;
+	},
+	// Get an array of all attributes of a DOM node
+	// For example <div class="foo" style="bar"> returns
+	//	[ {nodeName:'class', nodeValue:'foo'}, {nodeName:'style', nodeClass:'bar'} ]
+	getElementAttributes: function(element) {
+		var attrs = [];
+		var hold = this.jq('<div></div>');
+		try {
+			element = this.jq(element).clone().text('').appendTo(hold);
+		} catch(e) {
+			hold.remove();
+			return attrs;
+		}
+
+		var groups = hold.html().match(/([a-zA-Z0-9\-]+)=("[^">]+"[ >]|[^">]+[ >])/g);
+
+		if(groups != null && groups != false && groups.length) {
+			for(var x=0; x<groups.length; x++) {
+				var pair = groups[x].split('=');
+				attrs[x] = {
+					'nodeName':pair[0],
+					'nodeValue':pair[1].replace(/"| $/g, '').replace('>', '')
+				};
+			}
+		}
+		hold.remove();
+		return attrs;
 	}
 };
 
@@ -1261,34 +1317,6 @@ function weightedSort(a, b) {
 	if ( a.weight > b.weight )
 		return -1;
 	return 0;
-}
-
-// Get an array of all attributes of a DOM node
-// For example <div class="foo" style="bar"> returns
-//	[ {nodeName:'class', nodeValue:'foo'}, {nodeName:'style', nodeClass:'bar'} ]
-function getElementAttributes(element) {
-	var attrs = new Array();
-	var hold = new Element('div');
-	try {
-		element = new Element(element).clone().set('text', '').inject(hold);
-	} catch(e) {
-		hold.dispose();
-		return attrs;
-	}
-
-	var groups = hold.innerHTML.match(/([a-zA-Z0-9\-]+)=("[^">]+"[ >]|[^">]+[ >])/g);
-
-	if(groups != null && groups != false && groups.length) {
-		for(var x=0; x<groups.length; x++) {
-			var pair = groups[x].split('=');
-			attrs[x] = {
-				'nodeName':pair[0],
-				'nodeValue':pair[1].replace(/"| $/g, '').replace('>', '')
-			};
-		}
-	}
-	hold.dispose();
-	return attrs;
 }
 
 // Auto-complete for input fields. Suggestions come from object

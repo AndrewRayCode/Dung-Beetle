@@ -67,6 +67,8 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_function {color:#008800;}
 .dung_element {color:#660033;}
 .dung_other {color:brown;}
+.dung_obj_lbl {color:#660033; font-weight:bold;}
+.dung_obj_lbl.dung_sub_obj {color:#666;}
 .dung_error, .dung_error span {color:#aa0000; background:#ffeeee;}
 .console_response {border-bottom:1px solid #ddd;}
 .console_buttons {height:22px; bottom:2px; left:808px; border-top:1px solid #fff; background:#D7D9DE; position:absolute; width:200px; display:none;}
