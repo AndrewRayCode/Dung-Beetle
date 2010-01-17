@@ -25,9 +25,10 @@ body {font-family:Trebuchet Ms; background:#660033 url(site_bg.gif) top left rep
 
 /* DOM viewing styles */
 .dung_outline {background:#8888ff; position:absolute; top:0; left:0; width:2px; height:2px;}
-.dung_overlay {background:#660033; opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none;}
-.dung_padding {background:#8822EE; opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none;}
-.dung_margin {background:#99BBFF; opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none;}
+.dung_overlay, .dung_padding, .dung_margin {opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none; line-height:0; font-size:0;}
+.dung_overlay {background:#660033;}
+.dung_padding {background:#8822EE;}
+.dung_margin {background:#99BBFF;}
 
 .dung_display {position:absolute; top:26px; left:2px; height:95px; width:800px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
 .dung_styler {position:absolute; top:26px; left:806px; height:130px; width:100px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
