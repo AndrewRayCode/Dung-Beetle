@@ -38,7 +38,7 @@
 .dung_header span a {font-weight:bold; color:#660033;}
 .dung_header button {outline:none; font-size:9pt; width:100px; height:24px; margin:0; padding:0; border:1px solid #aaa; border-bottom:0 none; top:0; background:#eee; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
 .dung_header button.dung_inspect {left:85px; height:22px; border-bottom:1px solid #aaa !important;}
-.dung_header button.dung_inspect.active {color:#fff;}
+.dung_header button.dung_inspect.active {color:#fff; background:#883355;}
 .dung_header button.dung_console {left:190px;}
 .dung_header button.dung_html {left:295px;}
 .dung_header button.dung_dom {left:400px;}

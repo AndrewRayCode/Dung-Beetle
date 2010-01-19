@@ -183,7 +183,7 @@ var dung_beetle = {
 
 		// Don't do anything if we click on an active input
 		if(clicked.attr('tag') == 'input') {
-			return evt.stop();
+			return evt.stopPropagation();
 		}
 
 		// Dispose of any active inputs if clicking away (passing the input to the method fires its cancel function)
@@ -225,17 +225,315 @@ var dung_beetle = {
 	hoverEvent: function() {
 		
 	},
-	bodyHoverEvent: function() {
-		
-	},
 	stick: function() {
 		
 	},
 	displayDom: function() {
 		
 	},
+	// Given an element in the body, highlight the respective element in the DOM view
+	highlightInDOMView: function(element) {
+		var view_element = this.findInDOMView(element);
+		current_dom_node = this.jq(view_element.children()[0]);
+		current_dom_node.addClass('dung_dom_selected');
+		//var fx = new Fx.Scroll(dung_display, {'duration':300}).start(0, current_dom_node.dung_position); //TODO: Portme!
+	},
+	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
+	findInDOMView: function(element, papa) {
+		var found = false;
+		if(papa) {papa = this.elements.display;}
+		if(element.className) {
+			if(element.className.match('dung_beetle')) {
+				return null;
+			}
+		}
+
+		if(papa.hover_highlight == element) {
+			return papa;
+		} else {
+			var nodes=papa.childNodes;
+			if(nodes.length) {
+				for(var x=0; x<nodes.length; x++) {
+					var find = this.findInDOMView(element, nodes[x]);
+					if(find) return find;
+				}
+			}
+		}
+	},
+	// Display everything inside the body tag and highlight it
+	displayDOM: function(papa, element) {
+		if(!papa) {papa = this.elements.display; this.elements.display.empty()}
+		element = element || body;
+		if(element.className) {
+			if(element.className.match('dung')) {
+				return;
+			}
+		}
+
+		if(this.$type(element) == 'textnode') {
+			var text = this.jq('<span></span>').appendTo(papa);
+			text.html(element.nodeValue);
+			//text.hover_highlight = element.parentNode;
+		} else if(element.nodeName == '#text') {
+			this.jq(papa).remove();
+		} else {
+			var tag_open = this.jq('<div></div>').attr('class', 'dung_tag_open').text('<'+element.nodeName.toLowerCase()).appendTo(papa);
+			var tag_close = this.jq('<div></div>').attr('class', 'dung_tag_close').text('</'+element.nodeName.toLowerCase()+'>');
+			papa.hover_highlight = element;
+			tag_open.hover_highlight = element;
+			tag_open.dung_position = tag_open.offset().top - this.elements.diplay.offset().top;
+			tag_close.hover_highlight = element;
+
+			var attributes = this.getElementAttributes(element);
+			var styles = '';
+			if(attributes.length) {
+				for(var x=0; x<attributes.length; x++) {
+					styles += '<span class="dung_html_attr"> <span class="dung_html_prop">'+attributes[x].nodeName+'</span>="'
+						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
+				}
+			}
+			tag_open.html(tag_open.html() + styles);
+
+			var nodes = element.childNodes;
+			if(nodes.length) {
+				for(var x=0; x<nodes.length; x++) {
+					var node = this.jq('<div></div>').attr('class', 'dung_node').appendTo(papa);
+					this.displayDOM(node, nodes[x]);
+				}
+				tag_open.html(tag_open.html() + '&gt;');
+				tag_close.appendTo(papa);
+			} else {
+				tag_open.html(tag_open.html() + ' /&gt;');
+			}
+		}
+	},
+	// Show an element's styles and highlight it in the DOM. Takes in click event on element or element in body
+	inspectElement: function(mixed) {
+		var elem;
+		if(this.type(mixed) != 'element') {
+			mixed.stopPropagation();
+			elem = this.jq(mixed.target);
+		} else {
+			elem = mixed;
+		}
+		current_element = elem.className.test(/dung/) ? current_element : elem;
+		var full_selector = this.getFullSelector(current_element);
+		var element_selector = this.getSelector(current_element);
+
+		var str = '<div class="dung_css_selector"><div class="css_title"><span>element.style</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>';
+		if(elem.attr('style').length > 1) {
+			var styles = elem.attr('style').split(';');
+			for(var x=0; x<styles.length; x++) {
+				if(this.trim(styles[x]).length > 0) {
+					var pair = styles[x].split(':');
+					str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
+				}
+			}
+		}
+		this.elements.styler.html(str + '<span>}</span></div><br />');
+
+		// Determine inherited styles. This loop determines what styles from the stylesheet affect the given element.
+		var uses = false;
+		for(var stylesheet in CSS) {
+			var css_styles = [];
+			for(var rule in CSS[stylesheet]) {
+				if(this.matchFullSelector(rule, full_selector)) {
+					css_styles[css_styles.length] = {
+						weight: this.getSelectorWeight(rule, element_selector), 'html':'<div class="dung_css_selector"><div class="css_title"><span>'+rule
+							+'</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>'
+					};
+					var rules = CSS[stylesheet][rule].split('; ');
+					for(var x=0; x<rules.length; x++) {
+						if(rules[x].length > 0) {
+							var pair = rules[x].split(':');
+							if(pair[0].indexOf('-moz') == -1) {
+								css_styles[css_styles.length-1]['html'] += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()
+									+'</span>: <span class="dung_val">'+this.dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
+							}
+						}
+					}
+					css_styles[css_styles.length-1]['html'] += '<span>}</span></div><br />';
+				}
+			}
+			css_styles.sort(this.weightedSort);
+			for(var x=0; x<css_styles.length; x++) {
+				this.elements.styler.html(this.elements.styler.html() + css_styles[x]['html']);
+			}
+		}
+	},
+	// Show or hide the blue outlines around elements being inspected
+	toggleOutlines: function() {
+		if(this.elements.outlines.top.css('display') == 'none') {
+			this.elements.outlines.top.css('display', 'block');
+			this.elements.outlines.bottom.css('display', 'block');
+			this.elements.outlines.right.css('display', 'block');
+			this.elements.outlines.left.css('display', 'block');
+		} else {
+			this.elements.outlines.top.css('display', 'none');
+			this.elements.outlines.bottom.css('display', 'none');
+			this.elements.outlines.right.css('display', 'none');
+			this.elements.outlines.left.css('display', 'none');
+		}
+	}, 
+	stop: function(event) {
+		this.dungstatus.enabled = false;
+		this.stopDOMInspection();
+		this.elements.dung_beetle.remove();
+		this.elements.outlines.top.remove();
+		this.elements.outlines.bottom.remove();
+		this.elements.outlines.right.remove();
+		this.elements.outlines.left.remove();
+		this.elements.dung_push.remove();
+	},
+	showOutlines: function() {
+		if(this.elements.outlines.top.css('display') == 'none') {
+			this.toggleOutlines();
+		}
+	},
+	// Show the margin and padding of an element
+	visualizeElement: function(elem) {
+		this.dungstatus.visualizing = true;
+		var pos = elem.offset();
+		var padding = {
+			top: parseInt(elem.css('padding-top')),
+			left: parseInt(elem.css('padding-left')),
+			bottom: parseInt(elem.css('padding-bottom')),
+			right: parseInt(elem.css('padding-right'))
+		}
+		var size = {
+			x:elem.width() - padding.left - padding.right,
+			y:elem.height() - padding.top - padding.bottom
+		}
+		var margin = {
+			top: parseInt(elem.css('margin-top').toInt()),
+			left: parseInt(elem.css('margin-left').toInt()),
+			bottom: parseInt(elem.css('margin-bottom').toInt()),
+			right: parseInt(elem.css('margin-right').toInt())
+		}
+
+		this.elements.overlay.setStyles({'display':'block', 'left':(pos.left+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
+		this.elements.padding.top.setStyles({'display':'block', 'left':pos.left+'px', 'top':pos.top+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
+		this.elements.padding.left.setStyles({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
+		this.elements.padding.bottom.setStyles({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top+size.y)+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.bottom)+'px'});
+		this.elements.padding.right.setStyles({'display':'block', 'left':(pos.left+size.x+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
+
+		this.elements.margin.top.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top-margin.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.top)+'px'});
+		this.elements.margin.left.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top)+'px', 'width':(margin.left)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
+		this.elements.margin.bottom.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top+size.y+padding.bottom+padding.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.bottom)+'px'});
+		this.elements.margin.right.setStyles({'display':'block', 'left':(pos.left+size.x+padding.left+padding.right)+'px', 'top':(pos.top)+'px', 'width':(margin.right)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
+	},
+	hideElementVisuals: function() {
+		this.dungstatus.visualizing = false;
+		this.elements.overlay.setStyle('display', 'none');
+		this.elements.padding.top.setStyle('display', 'none');
+		this.elements.padding.left.setStyle('display', 'none');
+		this.elements.padding.bottom.setStyle('display', 'none');
+		this.elements.padding.right.setStyle('display', 'none');
+
+		this.elements.margin.top.setStyle('display', 'none');
+		this.elements.margin.left.setStyle('display', 'none');
+		this.elements.margin.bottom.setStyle('display', 'none');
+		this.elements.margin.right.setStyle('display', 'none');
+	},
+	// Display the blue outlines around an element to show it's position
+	outlineElement: function(mixed) {
+		var elem;
+		if(this.type(mixed) == 'element') {
+			elem = evt;
+		} else {
+			mixed.stopPropagation();
+			elem = this.jq(evt.target);
+			if(elem.className && elem.className.match('dung')) {return;}
+
+			if(dung_status.indung_lock != true) {
+				if(current_dom_node) {
+					current_dom_node.removeClass('dung_dom_selected');
+				}
+				console.log('sending ',elem);
+				this.highlightInDOMView(elem);
+				this.inspectElement(mixed);
+			}
+		}
+
+		if(!elem.className.match('dung') && elem != body) {
+			var pos = elem.offset();
+			var size = {x: elem.width(), y: elem.height()};
+
+			this.elements.outlines.top.css({'top':pos.top, 'left':pos.left, 'width':size.x});
+			this.elements.outlines.bottom.css({'top':pos.top+size.y, 'left':pos.left, 'width':(parseInt(size.x)+2)+'px'});
+			this.elements.outlines.right.css({'top':pos.top, 'left':pos.left+size.x, 'height':size.y});
+			this.elements.outlines.left.css({'top':pos.top, 'left':pos.left, 'height':size.y});
+		}
+	},
+	hideOutlines: function() {
+		if(this.elements.outlines.top.css('display') != 'none') {
+			this.toggleOutlines();
+		}
+	},
+	// Handles hovering over body elements
+	bodyHoverEvent: function(evt) {
+		if(this.dungstatus.realtime_inspect) {
+			this.outlineElement(evt);
+		} else if(this.dungstatus.visualizing) {
+			this.hideElementVisuals();
+		}
+	},
+	// Handles click on the actual page. Only active at certain times
+	bodyClickEvent: function(evt) {
+		this.dungstatus.indung_lock = true;
+
+		if(this.current_dom_node) {
+			this.current_dom_node.removeClass('dung_dom_selected');
+		}
+
+		if(!evt.target.className || !/dung/.test(evt.target.className)) {
+			this.inspectElement(evt);
+			this.highlightInDOMView(evt.target);
+		} else {
+			//this.highlightInDOMView(this.current_element);
+		}
+		this.stopDOMInspection();
+	},
+	stopDOMInspection: function() {
+		//Stop DOM inspection
+		this.jq('#dung_inspect').toggleClass('active');
+		this.hideOutlines();
+		this.dungstatus.realtime_inspect = false;
+		this.jq('body').unbind('click', this.bind(this.bodyClickEvent, this));
+		this.jq('body').unbind('mouseover', this.bind(this.bodyHoverEvent, this));
+	},
+	startDOMInspection: function() {
+		//Start DOM inspection
+		this.jq('#dung_inspect').toggleClass('active');
+		this.dungstatus.realtime_inspect = true;
+		this.dungstatus.indung_lock = false;
+		this.showOutlines();
+		this.jq('body').bind('click', this.bind(this.bodyClickEvent, this));
+		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
+	},
 	checkCSSLoaded: function() {
-		
+		for(var x=0; x <document.styleSheets.length; x++) {
+			var styleSheet = document.styleSheets[x];
+			try {
+				styleSheet.rules || styleSheet.cssRules;
+			} catch(e) {
+				setTimeout(this.bind(this.checkCSSLoaded, this), 100);
+				return;
+			}
+		}
+		this.CSS = parseCSS();
+	},
+	parseCSS: function() {
+		var css={};
+		for(var x=0; x <document.styleSheets.length; x++) {
+			var styleSheet = document.styleSheets[x];
+			css[styleSheet.href] = {};
+			var rules = styleSheet.rules || styleSheet.cssRules;
+			for(var i=0; i<rules.length; i++) {;
+				css[styleSheet.href][rules[i]['selectorText']] = rules[i]['style']['cssText'];
+			}
+		}
+		return css;
 	},
 	setMode: function(mode) {
 		this.elements.dung_beetle.find('button').removeClass('active');
@@ -318,9 +616,9 @@ var dung_beetle = {
 			this.elements.console.innerHTML += '<div class="console_response"><span class="dung_error">'+this.formatObject(obj)+'</span></div>';
 			// new Fx.Scroll(dung_console, {'duration':0}).toBottom() //TODO: Portme
 		},
-		warn: function() {
+		/*warn: function() {
 
-		},
+		},*/
 		keyEvent: function(e) {
 			// take from consoleKeyEvent
 		},
@@ -372,9 +670,6 @@ var dung_beetle = {
 			DOM: 4			// DOM tab view
 		},
 		elements: {}
-	},
-	stop: function() {
-		alert('See you in hell!');
 	},
 	dungstatus: {
 		enabled: false,
@@ -502,327 +797,11 @@ var dung_beetle = {
 		}
 		hold.remove();
 		return attrs;
+	},
+	trim: function(){
+		return this.replace(/^\s+|\s+$/g, '');
 	}
 };
-
-// Change the display mode for the console
-function setDungConsoleMode(mode) {
-}
-
-function stopDOMInspection() {
-	//Stop DOM inspection
-	$('dung_inspect').toggleClass('active');
-	hideOutlines();
-	dung_status.realtime_inspect = false;
-	body.removeEvent('click', bodyClick);
-	body.removeEvent('mouseover', bodyHover);
-}
-function startDOMInspection() {
-	//Start DOM inspection
-	$('dung_inspect').toggleClass('active');
-	dung_status.realtime_inspect = true;
-	dung_status.indung_lock = false;
-	showOutlines();
-	body.addEvent('click', bodyClick);
-	body.addEvent('mouseover', bodyHover);
-}
-
-function checkCSSLoaded() {
-	for(var x=0; x <document.styleSheets.length; x++) {
-		var styleSheet = document.styleSheets[x];
-		try {
-			$pick(styleSheet.rules, styleSheet.cssRules);
-		} catch(e) {
-			setTimeout(function(){checkCSSLoaded();}, 100);
-			return;
-		}
-	}
-	CSS = parseCSS();
-}
-
-function parseCSS() {
-	var css={};
-	for(var x=0; x <document.styleSheets.length; x++) {
-		var styleSheet = document.styleSheets[x];
-		css[styleSheet.href] = {};
-		var rules = $pick(styleSheet.rules, styleSheet.cssRules);
-		for(var i=0; i<rules.length; i++) {;
-			css[styleSheet.href][rules[i]['selectorText']] = rules[i]['style']['cssText'];
-		}
-	}
-	return css;
-}
-
-function showOutlines() {
-	if(outline_top.getStyle('display') == 'none') {
-		toggleOutlines();
-	}
-}
-function hideOutlines() {
-	if(outline_top.getStyle('display') != 'none') {
-		toggleOutlines();
-	}
-}
-
-// Handles hovering over body elements
-function bodyHover(event) {
-	if(dung_status.realtime_inspect) {
-		outlineElement(event);
-	} else if(dung_status.visualizing) {
-		hideElementVisuals();
-	}
-}
-
-// Handles click on the actual page. Only active at certain times
-function bodyClick(event) {
-	dung_status.indung_lock = true;
-
-	if(current_dom_node) {
-		current_dom_node.removeClass('dung_dom_selected');
-	}
-
-	if(!event.target.className || !event.target.className.test(/dung/)) {
-		inspectElement(event);
-		highlightInDOMView(new Event(event).target);
-	} else {
-		highlightInDOMView(current_element);
-	}
-	stopDOMInspection();
-}
-
-// Show or hide the blue outlines around elements being inspected
-function toggleOutlines() {
-	if(outline_top.getStyle('display') == 'none') {
-		outline_top.setStyle('display', 'block');
-		outline_bottom.setStyle('display', 'block');
-		outline_right.setStyle('display', 'block');
-		outline_left.setStyle('display', 'block');
-	} else {
-		outline_top.setStyle('display', 'none');
-		outline_bottom.setStyle('display', 'none');
-		outline_right.setStyle('display', 'none');
-		outline_left.setStyle('display', 'none');
-	}
-}
-
-function stopDungBeetle(event) {
-	dung_status.enabled = false;
-	stopDOMInspection();
-	body.removeEvent('mouseover', bodyHover);
-	dung_beetle.dispose();
-	outline_top.dispose();
-	outline_bottom.dispose();
-	outline_right.dispose();
-	outline_left.dispose();
-	dung_push.dispose();
-	window.removeEvent('scroll', stickConsole);
-}
-
-// Show the margin and padding of an element
-function visualizeElement(elem) {
-	dung_status.visualizing = true;
-	var pos = elem.getPosition();
-	var padding = {
-		'top':elem.getStyle('padding-top').toInt(),
-		'left':elem.getStyle('padding-left').toInt(),
-		'bottom':elem.getStyle('padding-bottom').toInt(),
-		'right':elem.getStyle('padding-right').toInt()
-	}
-	var size = {
-		'x':elem.getSize().x.toInt() - padding.left - padding.right,
-		'y':elem.getSize().y.toInt() - padding.top - padding.bottom
-	}
-	var margin = {
-		'top':elem.getStyle('margin-top').toInt(),
-		'left':elem.getStyle('margin-left').toInt(),
-		'bottom':elem.getStyle('margin-bottom').toInt(),
-		'right':elem.getStyle('margin-right').toInt()
-	}
-
-	dung_overlay.setStyles({'display':'block', 'left':(pos.x+padding.left)+'px', 'top':(pos.y+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
-	dung_padding.top.setStyles({'display':'block', 'left':pos.x+'px', 'top':pos.y+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
-	dung_padding.left.setStyles({'display':'block', 'left':pos.x+'px', 'top':(pos.y+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
-	dung_padding.bottom.setStyles({'display':'block', 'left':pos.x+'px', 'top':(pos.y+padding.top+size.y)+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.bottom)+'px'});
-	dung_padding.right.setStyles({'display':'block', 'left':(pos.x+size.x+padding.left)+'px', 'top':(pos.y+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
-
-	dung_margin.top.setStyles({'display':'block', 'left':(pos.x-margin.left)+'px', 'top':(pos.y-margin.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.top)+'px'});
-	dung_margin.left.setStyles({'display':'block', 'left':(pos.x-margin.left)+'px', 'top':(pos.y)+'px', 'width':(margin.left)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
-	dung_margin.bottom.setStyles({'display':'block', 'left':(pos.x-margin.left)+'px', 'top':(pos.y+size.y+padding.bottom+padding.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.bottom)+'px'});
-	dung_margin.right.setStyles({'display':'block', 'left':(pos.x+size.x+padding.left+padding.right)+'px', 'top':(pos.y)+'px', 'width':(margin.right)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
-}
-function hideElementVisuals() {
-	dung_status.visualizing = false;
-	dung_overlay.setStyle('display', 'none');
-	dung_padding.top.setStyle('display', 'none');
-	dung_padding.left.setStyle('display', 'none');
-	dung_padding.bottom.setStyle('display', 'none');
-	dung_padding.right.setStyle('display', 'none');
-
-	dung_margin.top.setStyle('display', 'none');
-	dung_margin.left.setStyle('display', 'none');
-	dung_margin.bottom.setStyle('display', 'none');
-	dung_margin.right.setStyle('display', 'none');
-
-}
-
-// Display the blue outlines around an element to show it's position
-function outlineElement(event) {
-	var elem;
-	if($type(event) == 'element') {
-		elem = event;
-	} else {
-		var e = new Event(event).stop();
-		elem = new Element(e.target);
-		if(elem.className && elem.className.match('dung')) {return;}
-
-		if(dung_status.indung_lock != true) {
-			if(current_dom_node) {
-				current_dom_node.removeClass('dung_dom_selected');
-			}
-			highlightInDOMView(e.target);
-			inspectElement(event);
-		}
-	}
-
-	if(!elem.className.match('dung') && elem != body) {
-		var pos = elem.getPosition();
-		var size = elem.getSize();
-
-		outline_top.setStyles({'top':pos.y, 'left':pos.x, 'width':size.x});
-		outline_bottom.setStyles({'top':pos.y+size.y, 'left':pos.x, 'width':(parseInt(size.x)+2)+'px'});
-		outline_right.setStyles({'top':pos.y, 'left':pos.x+size.x, 'height':size.y});
-		outline_left.setStyles({'top':pos.y, 'left':pos.x, 'height':size.y});
-	}
-}
-
-// Given an element in the body, highlight the respective element in the DOM view
-function highlightInDOMView(element) {
-	var view_element = findInDOMView(element);
-	current_dom_node = view_element.getFirst();
-	current_dom_node.addClass('dung_dom_selected');
-	var fx = new Fx.Scroll(dung_display, {'duration':300}).start(0, current_dom_node.dung_position);
-}
-
-// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
-function findInDOMView(element, parent) {
-	var found = false;
-	if(!$defined(parent)) { parent = dung_display;}
-	if(element.className) {
-		if(element.className.match('dung_beetle')) {
-			return null;
-		}
-	}
-
-	if(parent.hover_highlight == element) {
-		return parent;
-	} else {
-		var nodes=parent.childNodes;
-		if(nodes.length) {
-			for(var x=0; x<nodes.length; x++) {
-				var find = findInDOMView(element, nodes[x]);
-				if(find) return find;
-			}
-		}
-	}
-}
-
-// Display everything inside the body tag and highlight it
-function displayDOM(parent, element) {
-	if(!$defined(parent)) { parent = dung_display; dung_display.empty()}
-	element = $pick(element, body);
-	if(element.className) {
-		if(element.className.match('dung')) {
-			return;
-		}
-	}
-
-	if($type(element) == 'textnode') {
-		var text = new Element('span').inject(parent);
-		text.innerHTML = element.nodeValue;
-		//text.hover_highlight = element.parentNode;
-	} else if(element.nodeName == '#text') {
-		parent.dispose();
-	} else {
-		var tag_open = new Element('div', {'class':'dung_tag_open'}).set('text', '<'+element.nodeName.toLowerCase()).inject(parent);
-		var tag_close = new Element('div', {'class':'dung_tag_close'}).set('text', '</'+element.nodeName.toLowerCase()+'>');
-		parent.hover_highlight = element;
-		tag_open.hover_highlight = element;
-		tag_open.dung_position = tag_open.getPosition(dung_display).y
-		tag_close.hover_highlight = element;
-
-		var attributes = getElementAttributes(element);
-		var styles = '';
-		if(attributes.length) {
-			for(var x=0; x<attributes.length; x++) {
-				styles += '<span class="dung_html_attr"> <span class="dung_html_prop">'+attributes[x].nodeName+'</span>="<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
-			}
-		}
-		tag_open.innerHTML += styles;
-
-		var nodes=element.childNodes;
-		if(nodes.length) {
-			for(var x=0; x<nodes.length; x++) {
-				var node = new Element('div', {'class':'dung_node'}).inject(parent);
-				displayDOM(node, nodes[x]);
-			}
-			tag_open.innerHTML += '&gt;';
-			tag_close.inject(parent);
-		} else {
-			tag_open.innerHTML += ' /&gt;';
-		}
-	}
-}
-
-// Show an element's styles and highlight it in the DOM. Takes in click event on element or element in body
-function inspectElement(mixed) {
-	var elem;
-	if($type(mixed) == 'event') {
-		var e = new Event(mixed).stop();
-		elem = new Element(e.target);
-	} else {
-		elem = mixed;
-	}
-	current_element = elem.className.test(/dung/) ? current_element : elem;
-	var full_selector = getFullSelector(current_element);
-	var element_selector = getSelector(current_element);
-
-	var str = '<div class="dung_css_selector"><div class="css_title"><span>element.style</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>';
-	if(elem.get('style').length > 1) {
-		var styles = elem.get('style').split(';');
-		for(var x=0; x<styles.length; x++) {
-			if(styles[x].trim().length > 0) {
-				var pair = styles[x].split(':');
-				str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
-			}
-		}
-	}
-	dung_styler.innerHTML = str + '<span>}</span></div><br />';
-
-	// Determine inherited styles. This loop determines what styles from the stylesheet affect the given element.
-	var uses = false;
-	for(var stylesheet in CSS) {
-		var css_styles = [];
-		for(var rule in CSS[stylesheet]) {
-			if(matchFullSelector(rule, full_selector)) {
-				css_styles[css_styles.length] = {'weight':getSelectorWeight(rule, element_selector), 'html':'<div class="dung_css_selector"><div class="css_title"><span>'+rule+'</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>'};
-				var rules = CSS[stylesheet][rule].split('; ');
-				for(var x=0; x<rules.length; x++) {
-					if(rules[x].length > 0) {
-						var pair = rules[x].split(':');
-						if(pair[0].indexOf('-moz') == -1) {
-							css_styles[css_styles.length-1]['html'] += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
-						}
-					}
-				}
-				css_styles[css_styles.length-1]['html'] += '<span>}</span></div><br />';
-			}
-		}
-		css_styles.sort(weightedSort);
-		for(var x=0; x<css_styles.length; x++) {
-			dung_styler.innerHTML += css_styles[x]['html'];
-		}
-	}
-}
 
 // Gets the full selector to an element, including parents.
 // Breaks nested elements like '<div><span class="content"><h3></h3></span></div>' into string 'div span.content h3'
