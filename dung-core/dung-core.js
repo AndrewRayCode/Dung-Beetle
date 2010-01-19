@@ -79,13 +79,14 @@ var dung_beetle = {
 			.appendTo('body');
 
 		this.merge(this.elements, this.injectClassedDivsTo(
-			['resize', 'display', 'styler', 'header', 'cursor', 'upsize', 'verticle_divide'],
+			['resize', 'display', 'styler', 'header', 'cursor', 'upsize', 'vertical_divide'],
 			this.elements.dung_beetle
 		));
 		this.elements.header.html('<span><a href="http://www.andrewray.me/dung-beetle/index.html">Dung Beetle</a></span>'
-			+ '<button type="button" id="dung_inspect" class="inspect">Inspect</button>'
-			+ '<button type="button" id="dung_show_console" class="console">Console</button>'
-			+ '<button type="button" id="dung_show_html" class="html active">HTML</button>'
+			+ '<button type="button" id="dung_inspect" class="dung_inspect">Inspect</button>'
+			+ '<button type="button" id="dung_show_console" class="dung_console">Console</button>'
+			+ '<button type="button" id="dung_show_html" class="dung_html active">HTML</button>'
+			+ '<button type="button" id="dung_show_dom" class="dung_dom">DOM</button>'
 			+ '<div class="dung_toggle_btns" id="dung_close"></div>');
 		
 		this.elements.cursor.html('&#187;');
@@ -94,6 +95,7 @@ var dung_beetle = {
 		this.jq('#dung_inspect').bind('click', this.bind(this.toggleInspection, this));
 		this.jq('#dung_show_console').bind('click', this.bind(this.showConsoleTab, this));
 		this.jq('#dung_show_html').bind('click', this.bind(this.showHtmlTab, this));
+		this.jq('#dung_show_dom').bind('click', this.bind(this.showDomTab, this));
 
 		this.jq('#dung_close').bind('click', this.bind(this.stop, this));
 
@@ -156,6 +158,9 @@ var dung_beetle = {
 			$('dung_show_html').addClass('active');
 		}
 	},
+	showDomTab: function() {
+		// You know, it would probably be good to make this into an actual tab system
+	},
 	toggleInspection: function() {
 		if(this.console.mode != this.console.MODES.INSET) {
 			this.setMode(this.console.MODES.INSET);
@@ -169,52 +174,50 @@ var dung_beetle = {
 		}
 	},
 	dungClick: function(evt) {
-		alert(evt.target);
+		evt = this.jq(evt);
 		var clicked = this.jq(evt.target);
 		if(clicked.hasClass('dung_color_hover')) {
-			clicked = clicked.getParent();
+			clicked = clicked.parent();
 		}
-		var input = dung_beetle.getElement('input');
+		var input = this.elements.dung_beetle.find('input');
 
 		// Don't do anything if we click on an active input
-		if(clicked.get('tag') == 'input') {
-			var e = new Event(evt).stop();
-			return;
+		if(clicked.attr('tag') == 'input') {
+			return evt.stop();
 		}
 
 		// Dispose of any active inputs if clicking away (passing the input to the method fires its cancel function)
-		if(input != null && input != clicked) {
-			if(input.getParent().getParent().hasClass('dung_pair')) {
-				inputKeyEvent(input);
+		if(input.length && input[0] != clicked[0]) {
+			if(input.parent().parent().hasClass('dung_pair')) {
+				this.inputKeyEvent(input);
 			}
 		}
 
 		// Edit a CSS attribute or vlaue
 		if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
-			editValue(clicked);
-		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.getParent().getFirst() != current_dom_node) {
-			var clicked = clicked.getParent().getFirst();
+			this.editValue(clicked);
+		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.parent().children()[0] != this.current_dom_node) {
+			var clicked = this.jq(clicked.parent().children()[0]);
 			clicked.addClass('dung_dom_selected');
-			inspectElement(clicked.hover_highlight);
-			if(current_dom_node) {
-				current_dom_node.removeClass('dung_dom_selected');
+			this.inspectElement(clicked.hover_highlight);
+			if(this.current_dom_node) {
+				this.current_dom_node.removeClass('dung_dom_selected');
 			}
-			current_dom_node = clicked;
+			this.current_dom_node = clicked;
 		} else if(clicked.hasClass('cancel')) {
-			toggleCSSStyle(clicked.getParent());
-		} else if(clicked.src && clicked.src.indexOf('cancel') > -1) {
-			toggleCSSRule(clicked.getParent().getParent().getParent());
+			this.toggleCSSStyle(clicked.parent());
+		} else if(clicked.attr('src') && clicked.attr('src').indexOf('cancel') > -1) {
+			this.toggleCSSRule(clicked.parent().parent().parent());
 		}
 
 		// Execute multi-line script in console
 		if(clicked.hasClass('dung_execute')) {
-			executeConsole();
+			this.executeConsole();
 		} else if(clicked.hasClass('dung_clear')) {
-			dung_console.innerHTML = '';
-			console_input.value = '';
+			this.console.elements.console.html('');
+			this.console.elements.input.value('');
 		}
-
-		var e = new Event(evt).stop();
+		evt.stop();
 	},
 	dblClickEvent: function() {
 		
@@ -234,8 +237,45 @@ var dung_beetle = {
 	checkCSSLoaded: function() {
 		
 	},
-	setMode: function() {
-
+	setMode: function(mode) {
+		this.elements.dung_beetle.find('button').removeClass('active');
+		switch(mode) {
+			// Set to inline console on HTML page
+			case this.console.MODES.INSET:
+				this.elements.vertical_divide.css('display', 'block');
+				this.elements.cursor.css('display', 'block');
+				this.elements.display.css('display', 'block');
+				this.elements.styler.css('display', 'block');
+				this.console.elements.input.css({'width':'680px', 'left':'12px', 'height':'15px', 'bottom':'2px'});
+				this.console.elements.console.css({'width':'690px', 'height':'15px', 'bottom':'18px'});
+				this.elements.upsize.css('display', 'none');
+				this.console.elements.buttons.css('display', 'none');
+			break;
+			// Set to full console with one line input
+			case this.console.MODES.FULL:
+				this.elements.vertical_divide.css('display', 'none');
+				this.elements.display.css('display', 'none');
+				this.elements.styler.css('display', 'none');
+				this.elements.cursor.css('display', 'block');
+				this.console.elements.input.css({width:(this.jq(window).width()-16)+'px', left:'2px', height:'15px', bottom:'2px'});
+				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px'});
+				this.elements.upsize.css({display:'block', bottom:'2px'}).attr('class', 'dung_toggle_btns upsize');
+				this.console.elements.buttons.css('display', 'none');
+			break;
+			// Set to full console with multiline input
+			case this.console.MODES.FULL_MULTI:
+				this.elements.vertical_divide.css('display', 'block');
+				this.elements.display.css('display', 'none');
+				this.elements.styler.css('display', 'none');
+				this.elements.cursor.css('display', 'none');
+				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px'});
+				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px'});
+				this.elements.upsize.css({display:'block', bottom:'4px'}).set('class', 'dung_toggle_btns downsize');
+				this.console.elements.buttons.css('display', 'block');
+			break;
+		}
+		this.console.mode = mode;
+		this.stick();
 	},
 	// The console object, gives us .log, .warn, .error
 	console: {
@@ -328,7 +368,8 @@ var dung_beetle = {
 		MODES: {
 			INSET: 1,		// Inset one-line
 			FULL: 2,		// Full one-line
-			FULL_MULTI: 3	// Full multiline
+			FULL_MULTI: 3,	// Full multiline
+			DOM: 4			// DOM tab view
 		},
 		elements: {}
 	},
@@ -464,72 +505,8 @@ var dung_beetle = {
 	}
 };
 
-
-
-
-
-
-
-var dung_status = {'enabled':false};
-
-window.onstate = function() {
-	body = new Element(document.body);
-	$('inspect').addEvent('click', function() {
-		if(this.value == 'Start Dung Beetle Demo') {
-			startDungBeetle();
-			this.value = 'Stop Dung Beetle Demo';
-		} else {
-			stopDungBeetle();
-			this.value = 'Start Dung Beetle Demo';
-		}
-	});
-	startDungBeetle();
-};
-
-
-
 // Change the display mode for the console
 function setDungConsoleMode(mode) {
-	dung_beetle.getElements('button').each(function(item) {
-		item.removeClass('active');
-	});
-	switch(mode) {
-		// Set to inline console on HTML page
-		case 1:
-			dung_vertical_divide.setStyle('display', 'block');
-			console_cursor.setStyle('display', 'block');
-			dung_display.setStyle('display', 'block');
-			dung_styler.setStyle('display', 'block');
-			console_input.setStyles({'width':'680px', 'left':'12px', 'height':'15px', 'bottom':'2px'});
-			dung_console.setStyles({'width':'690px', 'height':'15px', 'bottom':'18px'});
-			console_upsize.setStyle('display', 'none');
-			console_buttons.setStyle('display', 'none');
-		break;
-		// Set to full console with one line input
-		case 2:
-			dung_vertical_divide.setStyle('display', 'none');
-			dung_display.setStyle('display', 'none');
-			dung_styler.setStyle('display', 'none');
-			console_cursor.setStyle('display', 'block');
-			console_input.setStyles({'width':(parseInt(window.getSize().x)-16)+'px', 'left':'2px', 'height':'15px', 'bottom':'2px'});
-			dung_console.setStyles({'bottom':'18px', 'width':(parseInt(window.getSize().x)-6)+'px', 'height':(parseInt(dung_beetle.getStyle('height'))-46)+'px' });
-			console_upsize.setStyles({'display':'block', 'bottom':'2px'}).set('class', 'dung_toggle_btns upsize');
-			console_buttons.setStyle('display', 'none');
-		break;
-		// Set to full console with multiline input
-		case 3:
-			dung_vertical_divide.setStyle('display', 'block');
-			dung_display.setStyle('display', 'none');
-			dung_styler.setStyle('display', 'none');
-			console_cursor.setStyle('display', 'none');
-			console_input.setStyles({'bottom':'25px', 'left':(parseInt(window.getSize().x)-204)+'px', 'width':'200px', 'height':(parseInt(dung_beetle.getStyle('height'))-30)+'px'});
-			dung_console.setStyles({'bottom':'2px', 'width':(parseInt(window.getSize().x)-210)+'px', 'height':(parseInt(dung_beetle.getStyle('height'))-30)+'px'});
-			console_upsize.setStyles({'display':'block', 'bottom':'4px'}).set('class', 'dung_toggle_btns downsize');
-			console_buttons.setStyle('display', 'block');
-		break;
-	}
-	console.mode = mode;
-	stickConsole();
 }
 
 function stopDOMInspection() {

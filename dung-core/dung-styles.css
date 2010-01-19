@@ -37,13 +37,14 @@
 .dung_header span {font-weight:bold; color:#660033; position:absolute; left:5px; top:3px; }
 .dung_header span a {font-weight:bold; color:#660033;}
 .dung_header button {outline:none; font-size:9pt; width:100px; height:24px; margin:0; padding:0; border:1px solid #aaa; border-bottom:0 none; top:0; background:#eee; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
-.dung_header button.inspect {left:85px; height:22px; border-bottom:1px solid #aaa !important;}
-.dung_header button.inspect.active {background:#883355; color:#fff;}
-.dung_header button.console {left:190px;}
-.dung_header button.html {left:295px;}
+.dung_header button.dung_inspect {left:85px; height:22px; border-bottom:1px solid #aaa !important;}
+.dung_header button.dung_inspect.active {color:#fff;}
+.dung_header button.dung_console {left:190px;}
+.dung_header button.dung_html {left:295px;}
+.dung_header button.dung_dom {left:400px;}
 .dung_header button:hover {background:#fff;}
 .dung_header button.active {background:#fff; color:#883355;}
-.dung_header button:active {outline:none;}
+.dung_header button:focus, .dung_header button:active {-moz-outline-style:none !important;}
 .dung_color_view {height:30px; width:30px; border:1px solid #888; display:none; position:absolute; z-index:9999;}
 div.dung_upsize:hover {cursor:pointer;}
 div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer;}
