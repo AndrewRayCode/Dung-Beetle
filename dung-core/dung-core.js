@@ -90,7 +90,154 @@ var dung_beetle = {
 		
 		this.elements.cursor.html('&#187;');
 		this.console.init(this.elements.dung_beetle, this);
+
+		this.jq('#dung_inspect').bind('click', this.bind(this.toggleInspection, this));
+		this.jq('#dung_show_console').bind('click', this.bind(this.showConsoleTab, this));
+		this.jq('#dung_show_html').bind('click', this.bind(this.showHtmlTab, this));
+
+		this.jq('#dung_close').bind('click', this.bind(this.stop, this));
+
+		this.elements.upsize.bind('click', this.bind(this.toggleUpsize, this));
+
+		this.elements.dung_beetle.bind('click', this.bind(this.dungClick, this));
+		this.elements.dung_beetle.bind('mouseover', this.bind(this.hoverEvent, this));
+		this.elements.dung_beetle.bind('dblclick', this.bind(this.dblClickEvent, this));
+
+		this.jq(window).bind('scroll', this.bind(this.stick, this));
+		this.jq(window).bind('resize', this.bind(this.stick, this));
+		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
+
+		this.stick();
+		this.displayDom();
+		this.checkCSSLoaded();
+
+		this.stick();
+
+		/* // TODO: Gotta port this!
+		dung_beetle.makeResizable({
+			'handle': dung_resize,
+			'modifiers':{'x':false, 'y': 'top'},
+			'onDrag': function() {
+				this.limit = {'y':[1, (window.getSize().y.toInt() + window.getScroll().y.toInt())]};
+				var height = window.getSize().y.toInt() - dung_beetle.getStyle('top').toInt() + window.getScroll().y.toInt();
+				dung_beetle.setStyle('height', height+'px');
+				stickConsole();
+				dung_push.setStyle('height', height+'px');
+			}
+		});
+		dung_vertical_divide.makeResizable({
+			'handle': dung_vertical_divide,
+			'modifiers':{'x':'left', 'y':false},
+			'onDrag':function() { stickConsole(); }
+		});
+		*/
 	},
+	toggleUpsize: function() {
+		if(this.console.mode == this.console.MODES.FULL) {
+			this.setMode(this.console.MODES.FULL_MULTI);
+			this.jq('#dung_show_console').addClass('active');
+		} else {
+			this.setMode(this.console.MODES.MULTI);
+			this.jq('#dung_show_console').addClass('active');
+		}
+	},
+	showConsoleTab: function() {
+		if(this.console.mode == console.MODES.INSET) {
+			if(this.dungstatus.realtime_inspect) {
+				this.stopDOMInspection();
+			}
+			this.setMode(2);
+			this.jq('dung_show_console').addClass('active');
+		}
+	},
+	showHtmlTab: function() {
+		if(this.console.mode != this.console.MODES.INSET) {
+			this.setMode(this.console.MODES.INSET);
+			$('dung_show_html').addClass('active');
+		}
+	},
+	toggleInspection: function() {
+		if(this.console.mode != this.console.MODES.INSET) {
+			this.setMode(this.console.MODES.INSET);
+			$('dung_show_html').addClass('active');
+		}
+
+		if(this.dungstatus.realtime_inspect) {
+			this.stopDOMInspection();
+		} else {
+			this.startDOMInspection();
+		}
+	},
+	dungClick: function(evt) {
+		alert(evt.target);
+		var clicked = this.jq(evt.target);
+		if(clicked.hasClass('dung_color_hover')) {
+			clicked = clicked.getParent();
+		}
+		var input = dung_beetle.getElement('input');
+
+		// Don't do anything if we click on an active input
+		if(clicked.get('tag') == 'input') {
+			var e = new Event(evt).stop();
+			return;
+		}
+
+		// Dispose of any active inputs if clicking away (passing the input to the method fires its cancel function)
+		if(input != null && input != clicked) {
+			if(input.getParent().getParent().hasClass('dung_pair')) {
+				inputKeyEvent(input);
+			}
+		}
+
+		// Edit a CSS attribute or vlaue
+		if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
+			editValue(clicked);
+		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.getParent().getFirst() != current_dom_node) {
+			var clicked = clicked.getParent().getFirst();
+			clicked.addClass('dung_dom_selected');
+			inspectElement(clicked.hover_highlight);
+			if(current_dom_node) {
+				current_dom_node.removeClass('dung_dom_selected');
+			}
+			current_dom_node = clicked;
+		} else if(clicked.hasClass('cancel')) {
+			toggleCSSStyle(clicked.getParent());
+		} else if(clicked.src && clicked.src.indexOf('cancel') > -1) {
+			toggleCSSRule(clicked.getParent().getParent().getParent());
+		}
+
+		// Execute multi-line script in console
+		if(clicked.hasClass('dung_execute')) {
+			executeConsole();
+		} else if(clicked.hasClass('dung_clear')) {
+			dung_console.innerHTML = '';
+			console_input.value = '';
+		}
+
+		var e = new Event(evt).stop();
+	},
+	dblClickEvent: function() {
+		
+	}, 
+	hoverEvent: function() {
+		
+	},
+	bodyHoverEvent: function() {
+		
+	},
+	stick: function() {
+		
+	},
+	displayDom: function() {
+		
+	},
+	checkCSSLoaded: function() {
+		
+	},
+	setMode: function() {
+
+	},
+	// The console object, gives us .log, .warn, .error
 	console: {
 		init: function(where, dung_beetle) {
 			this.dung = dung_beetle;
@@ -108,7 +255,11 @@ var dung_beetle = {
 			try {
 				console = this;
 			} catch(e) {
-				this.dung.merge(console, this);
+				try {
+					this.dung.merge(console, this);
+				} catch(e) {
+					console.warn('Warning, cannot overwrite console methods, Dung Beetle MAY explode and eat your family');
+				}
 			}
 
 			this.history_position = 0;
@@ -118,7 +269,6 @@ var dung_beetle = {
 		log: function() {
 			var str = '<div class="console_response">';
 			for(var x=0, l=arguments.length; x<l; x++) {
-				console.warn('logging ',arguments[x]);
 				str += this.formatObject(arguments[x])+' ';
 			}
 			this.elements.console.html(this.elements.console.html() + str+'&nbsp;</div>');
@@ -128,7 +278,7 @@ var dung_beetle = {
 			this.elements.console.innerHTML += '<div class="console_response"><span class="dung_error">'+this.formatObject(obj)+'</span></div>';
 			// new Fx.Scroll(dung_console, {'duration':0}).toBottom() //TODO: Portme
 		},
-		warm: function() {
+		warn: function() {
 
 		},
 		keyEvent: function(e) {
@@ -139,7 +289,6 @@ var dung_beetle = {
 			depth = (depth || 0) + 1;
 			var str = '';
 			var type = this.dung.type(obj);
-			console.warn(type);
 			if(type == 'string' ) {
 				str += '"<span class="dung_string">'+obj+'</span>"';
 			} else if(type == 'number' || type == 'boolean') {
@@ -183,89 +332,8 @@ var dung_beetle = {
 		},
 		elements: {}
 	},
-	noex: function() {
-		$('dung_inspect').addEvent('click', function() {
-			if(console.mode != 1) {
-				setDungConsoleMode(1);
-				$('dung_show_html').addClass('active');
-			}
-
-			if(dung_status.realtime_inspect) {
-				stopDOMInspection();
-			} else {
-				startDOMInspection();
-			}
-		});
-
-		$('dung_show_console').addEvent('click', function() {
-			if(console.mode == 1) {
-				if(dung_status.realtime_inspect) {
-					stopDOMInspection();
-				}
-				setDungConsoleMode(2);
-				$('dung_show_console').addClass('active');
-			}
-		});
-
-		$('dung_show_html').addEvent('click', function() {
-			if(console.mode != 1) {
-				setDungConsoleMode(1);
-				$('dung_show_html').addClass('active');
-			}
-		});
-
-		$('dung_close').addEvent('click', function() {
-			stopDungBeetle();
-			$('inspect').value = 'Start Dung Beetle Demo';
-		});
-
-		console_upsize.addEvent('click', function() {
-			if(console.mode == 2) {
-				setDungConsoleMode(3);
-				$('dung_show_console').addClass('active');
-			} else {
-				setDungConsoleMode(2);
-				$('dung_show_console').addClass('active');
-			}
-		});
-
-		dung_beetle.addEvent('click', consoleClick);
-		dung_beetle.addEvent('mouseover', consoleHover);
-		dung_beetle.addEvent('dblclick', consoleDblClick);
-
-		window.addEvent('scroll', stickConsole);
-		window.addEvent('resize', stickConsole);
-		body.addEvent('mouseover', bodyHover);
-
-		stickConsole();
-		displayDOM();
-		checkCSSLoaded();
-
-		stickConsole();
-		console.log('Dung Beetle:',dung_beetle);
-
-
-		/* // TODO: Gotta port this!
-		dung_beetle.makeResizable({
-			'handle': dung_resize,
-			'modifiers':{'x':false, 'y': 'top'},
-			'onDrag': function() {
-				this.limit = {'y':[1, (window.getSize().y.toInt() + window.getScroll().y.toInt())]};
-				var height = window.getSize().y.toInt() - dung_beetle.getStyle('top').toInt() + window.getScroll().y.toInt();
-				dung_beetle.setStyle('height', height+'px');
-				stickConsole();
-				dung_push.setStyle('height', height+'px');
-			}
-		});
-		dung_vertical_divide.makeResizable({
-			'handle': dung_vertical_divide,
-			'modifiers':{'x':'left', 'y':false},
-			'onDrag':function() { stickConsole(); }
-		});
-		*/
-	},
 	stop: function() {
-
+		alert('See you in hell!');
 	},
 	dungstatus: {
 		enabled: false,
@@ -965,51 +1033,6 @@ function editValue(mixed) {
 
 // Handles all major clicks on the console. Stops event bubbling and determines action
 function consoleClick(event) {
-	var clicked = new Element(event.target);
-	if(clicked.hasClass('dung_color_hover')) {
-		clicked = clicked.getParent();
-	}
-	var input = dung_beetle.getElement('input');
-
-	// Don't do anything if we click on an active input
-	if(clicked.get('tag') == 'input') {
-		var e = new Event(event).stop();
-		return;
-	}
-
-	// Dispose of any active inputs if clicking away (passing the input to the method fires its cancel function)
-	if(input != null && input != clicked) {
-		if(input.getParent().getParent().hasClass('dung_pair')) {
-			inputKeyEvent(input);
-		}
-	}
-
-	// Edit a CSS attribute or vlaue
-	if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
-		editValue(clicked);
-	} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.getParent().getFirst() != current_dom_node) {
-		var clicked = clicked.getParent().getFirst();
-		clicked.addClass('dung_dom_selected');
-		inspectElement(clicked.hover_highlight);
-		if(current_dom_node) {
-			current_dom_node.removeClass('dung_dom_selected');
-		}
-		current_dom_node = clicked;
-	} else if(clicked.hasClass('cancel')) {
-		toggleCSSStyle(clicked.getParent());
-	} else if(clicked.src && clicked.src.indexOf('cancel') > -1) {
-		toggleCSSRule(clicked.getParent().getParent().getParent());
-	}
-
-	// Execute multi-line script in console
-	if(clicked.hasClass('dung_execute')) {
-		executeConsole();
-	} else if(clicked.hasClass('dung_clear')) {
-		dung_console.innerHTML = '';
-		console_input.value = '';
-	}
-
-	var e = new Event(event).stop();
 }
 
 function consoleHover(event) {
