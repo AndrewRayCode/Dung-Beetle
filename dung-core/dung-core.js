@@ -329,7 +329,7 @@ var dung_beetle = {
 		if(elem.attr('style')) {
 			var styles = elem.attr('style').split(';');
 			for(var x=0; x<styles.length; x++) {
-				if(this.trim(styles[x]).length > 0) {
+				if(this.trim(styles[x])) {
 					var pair = styles[x].split(':');
 					str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
 				}
@@ -396,7 +396,7 @@ var dung_beetle = {
 	// For example, '.class div#id span h3' will match the selector of 'div#id h3'
 	matchFullSelector: function(test, selector) {
 		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]*') + '( |$)';
-		return selector.test(new RegExp(regex, 'i'));
+		return new RegExp(regex, 'i').test(selector);
 	}, 
 	// Determine CSS inheritance by "weight" of selectors (heaviest is most specific). Example: "#bob .hi" outweights ".hi"
 	getSelectorWeight: function(str, current_selector) {
@@ -571,7 +571,7 @@ var dung_beetle = {
 				return;
 			}
 		}
-		this.CSS = parseCSS();
+		this.CSS = this.parseCSS();
 	},
 	parseCSS: function() {
 		var css={};
