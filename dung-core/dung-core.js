@@ -50,7 +50,6 @@ var dung_beetle = {
 		this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head');
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
 
-
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
 			top: this.jq('<div></div>').attr('class', 'dung_padding').appendTo('body'),
@@ -112,6 +111,7 @@ var dung_beetle = {
 		this.stick();
 		this.displayDom();
 		this.checkCSSLoaded();
+		this.displayDOM();
 
 		this.stick();
 
@@ -137,10 +137,10 @@ var dung_beetle = {
 	toggleUpsize: function() {
 		if(this.console.mode == this.console.MODES.FULL) {
 			this.setMode(this.console.MODES.FULL_MULTI);
-			this.jq('#dung_show_console').addClass('active');
+			this.jq('#dung_show_console').addClass('dung_active');
 		} else {
 			this.setMode(this.console.MODES.MULTI);
-			this.jq('#dung_show_console').addClass('active');
+			this.jq('#dung_show_console').addClass('dung_active');
 		}
 	},
 	showConsoleTab: function() {
@@ -148,14 +148,14 @@ var dung_beetle = {
 			if(this.dungstatus.realtime_inspect) {
 				this.stopDOMInspection();
 			}
-			this.setMode(2);
-			this.jq('dung_show_console').addClass('active');
+			this.setMode(console.MODES.FULL);
+			this.jq('dung_show_console').addClass('dung_active');
 		}
 	},
 	showHtmlTab: function() {
 		if(this.console.mode != this.console.MODES.INSET) {
 			this.setMode(this.console.MODES.INSET);
-			$('dung_show_html').addClass('active');
+			$('dung_show_html').addClass('dung_active');
 		}
 	},
 	showDomTab: function() {
@@ -164,7 +164,7 @@ var dung_beetle = {
 	toggleInspection: function() {
 		if(this.console.mode != this.console.MODES.INSET) {
 			this.setMode(this.console.MODES.INSET);
-			$('dung_show_html').addClass('active');
+			$('dung_show_html').addClass('dung_active');
 		}
 
 		if(this.dungstatus.realtime_inspect) {
@@ -233,15 +233,19 @@ var dung_beetle = {
 	},
 	// Given an element in the body, highlight the respective element in the DOM view
 	highlightInDOMView: function(element) {
-		var view_element = this.findInDOMView(element);
-		current_dom_node = this.jq(view_element.children()[0]);
-		current_dom_node.addClass('dung_dom_selected');
+		var view_element = this.findInDOMView(element[0]);
+		if(!view_element || !view_element.length) {
+			console.warn(element);
+		} else{
+		this.current_dom_node = this.jq(view_element.children()[0]);
+		this.current_dom_node.addClass('dung_dom_selected');
 		//var fx = new Fx.Scroll(dung_display, {'duration':300}).start(0, current_dom_node.dung_position); //TODO: Portme!
+		}
 	},
 	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
 	findInDOMView: function(element, papa) {
 		var found = false;
-		if(papa) {papa = this.elements.display;}
+		if(!papa) {papa = this.elements.display[0];}
 		if(element.className) {
 			if(element.className.match('dung_beetle')) {
 				return null;
@@ -249,28 +253,28 @@ var dung_beetle = {
 		}
 
 		if(papa.hover_highlight == element) {
-			return papa;
+			return this.jq(papa);
 		} else {
 			var nodes=papa.childNodes;
 			if(nodes.length) {
 				for(var x=0; x<nodes.length; x++) {
 					var find = this.findInDOMView(element, nodes[x]);
-					if(find) return find;
+					if(find) return this.jq(find);
 				}
 			}
 		}
 	},
 	// Display everything inside the body tag and highlight it
 	displayDOM: function(papa, element) {
-		if(!papa) {papa = this.elements.display; this.elements.display.empty()}
-		element = element || body;
+		if(!papa) {papa = this.elements.display[0]; this.elements.display.empty()}
+		element = element || this.jq('body')[0];
 		if(element.className) {
 			if(element.className.match('dung')) {
 				return;
 			}
 		}
 
-		if(this.$type(element) == 'textnode') {
+		if(this.type(element) == 'textnode') {
 			var text = this.jq('<span></span>').appendTo(papa);
 			text.html(element.nodeValue);
 			//text.hover_highlight = element.parentNode;
@@ -280,8 +284,9 @@ var dung_beetle = {
 			var tag_open = this.jq('<div></div>').attr('class', 'dung_tag_open').text('<'+element.nodeName.toLowerCase()).appendTo(papa);
 			var tag_close = this.jq('<div></div>').attr('class', 'dung_tag_close').text('</'+element.nodeName.toLowerCase()+'>');
 			papa.hover_highlight = element;
+			//console.warn(papa, papa.hover_highlight);
 			tag_open.hover_highlight = element;
-			tag_open.dung_position = tag_open.offset().top - this.elements.diplay.offset().top;
+			tag_open.dung_position = tag_open.offset().top - this.elements.display.offset().top;
 			tag_close.hover_highlight = element;
 
 			var attributes = this.getElementAttributes(element);
@@ -297,7 +302,7 @@ var dung_beetle = {
 			var nodes = element.childNodes;
 			if(nodes.length) {
 				for(var x=0; x<nodes.length; x++) {
-					var node = this.jq('<div></div>').attr('class', 'dung_node').appendTo(papa);
+					var node = this.jq('<div></div>').attr('class', 'dung_node').appendTo(papa)[0];
 					this.displayDOM(node, nodes[x]);
 				}
 				tag_open.html(tag_open.html() + '&gt;');
@@ -314,14 +319,14 @@ var dung_beetle = {
 			mixed.stopPropagation();
 			elem = this.jq(mixed.target);
 		} else {
-			elem = mixed;
+			elem = this.jq(mixed);
 		}
-		current_element = elem.className.test(/dung/) ? current_element : elem;
+		current_element = /dung/.test(elem.className) ? current_element : elem;
 		var full_selector = this.getFullSelector(current_element);
 		var element_selector = this.getSelector(current_element);
 
 		var str = '<div class="dung_css_selector"><div class="css_title"><span>element.style</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>';
-		if(elem.attr('style').length > 1) {
+		if(elem.attr('style')) {
 			var styles = elem.attr('style').split(';');
 			for(var x=0; x<styles.length; x++) {
 				if(this.trim(styles[x]).length > 0) {
@@ -334,15 +339,15 @@ var dung_beetle = {
 
 		// Determine inherited styles. This loop determines what styles from the stylesheet affect the given element.
 		var uses = false;
-		for(var stylesheet in CSS) {
+		for(var stylesheet in this.CSS) {
 			var css_styles = [];
-			for(var rule in CSS[stylesheet]) {
+			for(var rule in this.CSS[stylesheet]) {
 				if(this.matchFullSelector(rule, full_selector)) {
 					css_styles[css_styles.length] = {
 						weight: this.getSelectorWeight(rule, element_selector), 'html':'<div class="dung_css_selector"><div class="css_title"><span>'+rule
 							+'</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>'
 					};
-					var rules = CSS[stylesheet][rule].split('; ');
+					var rules = this.CSS[stylesheet][rule].split('; ');
 					for(var x=0; x<rules.length; x++) {
 						if(rules[x].length > 0) {
 							var pair = rules[x].split(':');
@@ -361,6 +366,48 @@ var dung_beetle = {
 			}
 		}
 	},
+	// Gets the full selector to an element, including parents.
+	// Breaks nested elements like '<div><span class="content"><h3></h3></span></div>' into string 'div span.content h3'
+	getFullSelector: function(element) {
+		var str = this.getSelector(element);
+		var papa = element.parent();
+		if(papa && papa[0] != document) {
+			str = this.getFullSelector(papa) + ' '+str;
+		}
+		return str;
+	},
+	// Get the selector for an element, for example <div class="body" id="info"/> into div .body #info
+	getSelector: function(element) {
+		element = element[0];
+		var str = element.nodeName.toLowerCase();
+
+		var classes = element.className.split(' ');
+		for(var x=0; x<classes.length; x++) {
+			if(classes[x] != '') {
+				str+=' .'+classes[x];
+			}
+		}
+		if(element.id) {
+			str+=' #'+element.id;
+		}
+		return str;
+	},
+	// Determines if a CSS selector affects an element by analyzing the element's full DOM parentage.
+	// For example, '.class div#id span h3' will match the selector of 'div#id h3'
+	matchFullSelector: function(test, selector) {
+		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]*') + '( |$)';
+		return selector.test(new RegExp(regex, 'i'));
+	}, 
+	// Determine CSS inheritance by "weight" of selectors (heaviest is most specific). Example: "#bob .hi" outweights ".hi"
+	getSelectorWeight: function(str, current_selector) {
+		var tags = str.match(/(^| )[a-zA-Z0-9]+(\.| |$)/g);
+		var classes = str.match(/\.[^ ]+/g);
+		var ids = str.match(/\#[^ ]+/g);
+		return (tags ? tags.length : 0)
+			+ (classes ? classes.length * 10 : 0)
+			+ (ids ? ids.length * 100 : 0)
+			+ (this.matchFullSelector(str, current_selector) ? 10000 : 0);
+	}, 
 	// Show or hide the blue outlines around elements being inspected
 	toggleOutlines: function() {
 		if(this.elements.outlines.top.css('display') == 'none') {
@@ -439,23 +486,22 @@ var dung_beetle = {
 	outlineElement: function(mixed) {
 		var elem;
 		if(this.type(mixed) == 'element') {
-			elem = evt;
+			elem = mixed;
 		} else {
 			mixed.stopPropagation();
-			elem = this.jq(evt.target);
+			elem = this.jq(mixed.target);
 			if(elem.className && elem.className.match('dung')) {return;}
 
-			if(dung_status.indung_lock != true) {
-				if(current_dom_node) {
-					current_dom_node.removeClass('dung_dom_selected');
+			if(this.dungstatus.indung_lock != true) {
+				if(this.current_dom_node) {
+					this.current_dom_node.removeClass('dung_dom_selected');
 				}
-				console.log('sending ',elem);
 				this.highlightInDOMView(elem);
 				this.inspectElement(mixed);
 			}
 		}
 
-		if(!elem.className.match('dung') && elem != body) {
+		if(!/dung/.test(elem.className) && elem != document.body) {
 			var pos = elem.offset();
 			var size = {x: elem.width(), y: elem.height()};
 
@@ -472,7 +518,7 @@ var dung_beetle = {
 	},
 	// Handles hovering over body elements
 	bodyHoverEvent: function(evt) {
-		if(this.dungstatus.realtime_inspect) {
+		if(this.dungstatus.realtime_inspect && !/dung/.test(evt.target.className) && !this.jq(evt.target).parents().hasClass('dung_beetle')) {
 			this.outlineElement(evt);
 		} else if(this.dungstatus.visualizing) {
 			this.hideElementVisuals();
@@ -480,6 +526,10 @@ var dung_beetle = {
 	},
 	// Handles click on the actual page. Only active at certain times
 	bodyClickEvent: function(evt) {
+		if(/dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
+			return;
+		}
+
 		this.dungstatus.indung_lock = true;
 
 		if(this.current_dom_node) {
@@ -490,13 +540,13 @@ var dung_beetle = {
 			this.inspectElement(evt);
 			this.highlightInDOMView(evt.target);
 		} else {
-			//this.highlightInDOMView(this.current_element);
+			this.highlightInDOMView(this.current_element);
 		}
 		this.stopDOMInspection();
 	},
 	stopDOMInspection: function() {
 		//Stop DOM inspection
-		this.jq('#dung_inspect').toggleClass('active');
+		this.jq('#dung_inspect').removeClass('dung_active');
 		this.hideOutlines();
 		this.dungstatus.realtime_inspect = false;
 		this.jq('body').unbind('click', this.bind(this.bodyClickEvent, this));
@@ -504,7 +554,7 @@ var dung_beetle = {
 	},
 	startDOMInspection: function() {
 		//Start DOM inspection
-		this.jq('#dung_inspect').toggleClass('active');
+		this.jq('#dung_inspect').addClass('dung_active');
 		this.dungstatus.realtime_inspect = true;
 		this.dungstatus.indung_lock = false;
 		this.showOutlines();
@@ -536,7 +586,7 @@ var dung_beetle = {
 		return css;
 	},
 	setMode: function(mode) {
-		this.elements.dung_beetle.find('button').removeClass('active');
+		this.elements.dung_beetle.find('button').removeClass('dung_active');
 		switch(mode) {
 			// Set to inline console on HTML page
 			case this.console.MODES.INSET:
@@ -802,50 +852,6 @@ var dung_beetle = {
 		return this.replace(/^\s+|\s+$/g, '');
 	}
 };
-
-// Gets the full selector to an element, including parents.
-// Breaks nested elements like '<div><span class="content"><h3></h3></span></div>' into string 'div span.content h3'
-function getFullSelector(element) {
-	var str = getSelector(element);
-	if(element.getParent()) {
-		str = getFullSelector(element.getParent()) + ' '+str;
-	}
-	return str;
-}
-
-// Get the selector for an element, for example <div class="body" id="info"/> into div .body #info
-function getSelector(element) {
-	var str = element.nodeName.toLowerCase();
-
-	var classes = element.className.split(' ');
-	for(var x=0; x<classes.length; x++) {
-		if(classes[x] != '') {
-			str+=' .'+classes[x];
-		}
-	}
-	if(element.id) {
-		str+=' #'+element.id;
-	}
-	return str;
-}
-
-// Determines if a CSS selector affects an element by analyzing the element's full DOM parentage.
-// For example, '.class div#id span h3' will match the selector of 'div#id h3'
-function matchFullSelector(test, selector) {
-	var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]*') + '( |$)';
-	return selector.test(new RegExp(regex, 'i'));
-}
-
-// Determine CSS inheritance by "weight" of selectors (heaviest is most specific). Example: "#bob .hi" outweights ".hi"
-function getSelectorWeight(string, current_selector) {
-	var tags = string.match(/(^| )[a-zA-Z0-9]+(\.| |$)/g);
-	var classes = string.match(/\.[^ ]+/g);
-	var ids = string.match(/\#[^ ]+/g);
-	return (tags ? tags.length : 0)
-		+ (classes ? classes.length * 10 : 0)
-		+ (ids ? ids.length * 100 : 0)
-		+ (matchFullSelector(string, current_selector) ? 10000 : 0);
-}
 
 function compileStyles(style_group) {
 	var styles = splatStyles(style_group);
