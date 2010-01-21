@@ -199,7 +199,7 @@ var dung_beetle = {
 		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.parent().children()[0] != this.current_dom_node) {
 			var clicked = this.jq(clicked.parent().children()[0]);
 			clicked.addClass('dung_dom_selected');
-			this.inspectElement(clicked.hover_highlight);
+			this.inspectElement(clicked[0].hover_highlight);
 			if(this.current_dom_node) {
 				this.current_dom_node.removeClass('dung_dom_selected');
 			}
@@ -234,13 +234,10 @@ var dung_beetle = {
 	// Given an element in the body, highlight the respective element in the DOM view
 	highlightInDOMView: function(element) {
 		var view_element = this.findInDOMView(element[0]);
-		if(!view_element || !view_element.length) {
-			console.warn(element);
-		} else{
 		this.current_dom_node = this.jq(view_element.children()[0]);
 		this.current_dom_node.addClass('dung_dom_selected');
-		//var fx = new Fx.Scroll(dung_display, {'duration':300}).start(0, current_dom_node.dung_position); //TODO: Portme!
-		}
+		//console.log('we are scrolling to ',element);
+		this.scrollTo(this.elements.display, this.current_dom_node[0].dung_position);
 	},
 	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
 	findInDOMView: function(element, papa) {
@@ -285,9 +282,9 @@ var dung_beetle = {
 			var tag_close = this.jq('<div></div>').attr('class', 'dung_tag_close').text('</'+element.nodeName.toLowerCase()+'>');
 			papa.hover_highlight = element;
 			//console.warn(papa, papa.hover_highlight);
-			tag_open.hover_highlight = element;
-			tag_open.dung_position = tag_open.offset().top - this.elements.display.offset().top;
-			tag_close.hover_highlight = element;
+			tag_open[0].hover_highlight = element;
+			tag_open[0].dung_position = tag_open.offset().top - this.elements.display.offset().top;
+			tag_close[0].hover_highlight = element;
 
 			var attributes = this.getElementAttributes(element);
 			var styles = '';
@@ -331,7 +328,7 @@ var dung_beetle = {
 			for(var x=0; x<styles.length; x++) {
 				if(this.trim(styles[x])) {
 					var pair = styles[x].split(':');
-					str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
+					str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+this.colorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
 				}
 			}
 		}
@@ -353,7 +350,7 @@ var dung_beetle = {
 							var pair = rules[x].split(':');
 							if(pair[0].indexOf('-moz') == -1) {
 								css_styles[css_styles.length-1]['html'] += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()
-									+'</span>: <span class="dung_val">'+this.dungColorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
+									+'</span>: <span class="dung_val">'+this.colorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
 							}
 						}
 					}
@@ -518,7 +515,7 @@ var dung_beetle = {
 	},
 	// Handles hovering over body elements
 	bodyHoverEvent: function(evt) {
-		if(this.dungstatus.realtime_inspect && !/dung/.test(evt.target.className) && !this.jq(evt.target).parents().hasClass('dung_beetle')) {
+		if(this.dungstatus.realtime_inspect && !/dung/.test(evt.target.className) && !this.jq(evt.target).parents().hasClass('dung_beetle') && evt.target != document.body) {
 			this.outlineElement(evt);
 		} else if(this.dungstatus.visualizing) {
 			this.hideElementVisuals();
@@ -538,7 +535,7 @@ var dung_beetle = {
 
 		if(!evt.target.className || !/dung/.test(evt.target.className)) {
 			this.inspectElement(evt);
-			this.highlightInDOMView(evt.target);
+			this.highlightInDOMView(this.jq(evt.target));
 		} else {
 			this.highlightInDOMView(this.current_element);
 		}
@@ -660,7 +657,7 @@ var dung_beetle = {
 				str += this.formatObject(arguments[x])+' ';
 			}
 			this.elements.console.html(this.elements.console.html() + str+'&nbsp;</div>');
-			//new Fx.Scroll(dung_console, {'duration':0}).toBottom(); //TODO: Portme
+			this.dung.toBottom(this.elements.console);
 		},
 		error: function() {
 			this.elements.console.innerHTML += '<div class="console_response"><span class="dung_error">'+this.formatObject(obj)+'</span></div>';
@@ -805,6 +802,22 @@ var dung_beetle = {
 			this.elements.color_hover.css({'left':(this.input.mouse.x+9)+'px', 'top':(this.input.mouse.y+9)+'px'});
 		}
 	},
+	toBottom: function(elem, time) {
+		time = time || 200;
+		elem = this.jq(elem);
+		elem.animate({scrollTop: elem[0].scrollHeight}, {queue:false, duration:time});
+	},
+	scrollTo: function(elem, to, time) {
+		time = time || 200;
+		console.log(to, this.type(to));
+		var target = this.type(to) == 'number' ? to : this.jq(to).position().top;
+        elem.animate({scrollTop: target}, {queue:false, duration:time});
+	},
+	// Add spans to tags for color hovering
+	colorize: function(str) {
+		var regex = '('+this.presets.colors.join('|')+'|#[a-zA-Z0-9]+|rgb\\([0-9\\, ]+\\))';
+		return str.replace(new RegExp(regex, 'gi'), '<span class="dung_color_hover" style="border-bottom:1px dotted $1">$1</span>');
+	},
 	// Stolen verbatim from MooTools
 	type: function(obj){
 		if (obj == undefined) return 'undefined';
@@ -848,8 +861,8 @@ var dung_beetle = {
 		hold.remove();
 		return attrs;
 	},
-	trim: function(){
-		return this.replace(/^\s+|\s+$/g, '');
+	trim: function(str){
+		return str.replace(/^\s+|\s+$/g, '');
 	}
 };
 
@@ -1134,7 +1147,7 @@ function inputKeyEvent(mixed) {
 		if(event.key != 'backspace') { autoComplete(input, valid_css_elements); }
 		if(input.value.indexOf(':') > 1 || ((event.key == 'tab' || event.key == 'enter') && input.value.length > 0)) {
 			input.value = input.value.replace(':', '').trim();
-			input.getParent().innerHTML = dungColorize(input.value);
+			input.getParent().innerHTML = this.colorize(input.value);
 
 			// Either focus on the next box or...
 			var nextInput = parent.getNext().getFirst();
@@ -1167,7 +1180,7 @@ function inputKeyEvent(mixed) {
 		if(event.key != 'backspace') { autoComplete(input, input_ac_words); }
 		if((event.key == 'tab' || event.key == 'enter') && input.value.length > 0) {
 			input.value = input.value.replace(';', '').trim();
-			input.getParent().innerHTML = dungColorize(input.value);
+			input.getParent().innerHTML = this.colorize(input.value);
 			grandparent.removeClass('new');
 			compileStyles(greatparent);
 		} else if((event.key == 'esc' || event.key == 'tab'|| event.key == 'enter') && !grandparent.hasClass('new')) {
@@ -1344,11 +1357,6 @@ function getCurrentStyleTag() {
 	}
 }
 
-// Add spans to tags for color hovering
-function dungColorize(str) {
-	var regex = '('+dung_colors.join('|')+'|#[a-zA-Z0-9]+|rgb\\([0-9\\, ]+\\))';
-	return str.replace(new RegExp(regex, 'gi'), '<span class="dung_color_hover" style="border-bottom:1px dotted $1">$1</span>');
-}
 // Strip all HTML tags from a value
 function dungStripTags(str) {
 	return str.replace(/\<[^>]+\>/g, '');
