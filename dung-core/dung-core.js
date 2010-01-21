@@ -47,7 +47,15 @@ var console;
 var dung_beetle = {
 	start: function() {
 		this.jq = jQuery.noConflict('EXTREMEZ!1!one');
-		this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head');
+		if(this.jq('#dung_style_sheet').length) {
+			this.setup();
+		} else {
+			this.jq = jQuery.noConflict('EXTREMEZ!1!one');
+			var css = this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head');
+			css.ready(this.bind(this.setup, this));
+		}
+	},
+	setup: function() {
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
@@ -236,7 +244,6 @@ var dung_beetle = {
 		var view_element = this.findInDOMView(element[0]);
 		this.current_dom_node = this.jq(view_element.children()[0]);
 		this.current_dom_node.addClass('dung_dom_selected');
-		//console.log('we are scrolling to ',element);
 		this.scrollTo(this.elements.display, this.current_dom_node[0].dung_position);
 	},
 	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
@@ -283,7 +290,7 @@ var dung_beetle = {
 			papa.hover_highlight = element;
 			//console.warn(papa, papa.hover_highlight);
 			tag_open[0].hover_highlight = element;
-			tag_open[0].dung_position = tag_open.offset().top - this.elements.display.offset().top;
+			tag_open[0].dung_position = tag_open.position().top - this.jq('body').scrollTop();
 			tag_close[0].hover_highlight = element;
 
 			var attributes = this.getElementAttributes(element);
@@ -809,7 +816,6 @@ var dung_beetle = {
 	},
 	scrollTo: function(elem, to, time) {
 		time = time || 200;
-		console.log(to, this.type(to));
 		var target = this.type(to) == 'number' ? to : this.jq(to).position().top;
         elem.animate({scrollTop: target}, {queue:false, duration:time});
 	},
