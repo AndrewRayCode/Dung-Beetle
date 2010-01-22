@@ -50,13 +50,12 @@ var dung_beetle = {
 		if(this.jq('#dung_style_sheet').length) {
 			this.setup();
 		} else {
-			this.jq = jQuery.noConflict('EXTREMEZ!1!one');
-			var css = this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head');
-			css.ready(this.bind(this.setup, this));
+			this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head').ready(this.bind(this.setup, this));
 		}
 	},
 	setup: function() {
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
+		this.jq(window).bind('error', this.bind(this.trapError, this));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
@@ -90,10 +89,10 @@ var dung_beetle = {
 			this.elements.dung_beetle
 		));
 		this.elements.header.html('<span><a href="http://www.andrewray.me/dung-beetle/index.html">Dung Beetle</a></span>'
-			+ '<button type="button" id="dung_inspect" class="dung_inspect">Inspect</button>'
-			+ '<button type="button" id="dung_show_console" class="dung_console">Console</button>'
-			+ '<button type="button" id="dung_show_html" class="dung_html active">HTML</button>'
-			+ '<button type="button" id="dung_show_dom" class="dung_dom">DOM</button>'
+			+ '<div id="dung_inspect" class="dung_tab dung_inspect">Inspect</div>'
+			+ '<div id="dung_show_console" class="dung_tab dung_console">Console</div>'
+			+ '<div id="dung_show_html" class="dung_tab dung_html dung_active">HTML</div>'
+			+ '<div id="dung_show_dom" class="dung_tab dung_dom">DOM</div>'
 			+ '<div class="dung_toggle_btns" id="dung_close"></div>');
 		
 		this.elements.cursor.html('&#187;');
@@ -157,13 +156,13 @@ var dung_beetle = {
 				this.stopDOMInspection();
 			}
 			this.setMode(console.MODES.FULL);
-			this.jq('dung_show_console').addClass('dung_active');
+			this.jq('#dung_show_console').addClass('dung_active');
 		}
 	},
 	showHtmlTab: function() {
 		if(this.console.mode != this.console.MODES.INSET) {
 			this.setMode(this.console.MODES.INSET);
-			$('dung_show_html').addClass('dung_active');
+			this.jq('#dung_show_html').addClass('dung_active');
 		}
 	},
 	showDomTab: function() {
@@ -220,7 +219,7 @@ var dung_beetle = {
 
 		// Execute multi-line script in console
 		if(clicked.hasClass('dung_execute')) {
-			this.executeConsole();
+			this.execute();
 		} else if(clicked.hasClass('dung_clear')) {
 			this.console.elements.console.html('');
 			this.console.elements.input.value('');
@@ -530,7 +529,7 @@ var dung_beetle = {
 	},
 	// Handles click on the actual page. Only active at certain times
 	bodyClickEvent: function(evt) {
-		if(/dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
+		if(!this.dungstatus.realtime_insepct || /dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
 			return;
 		}
 
@@ -590,7 +589,7 @@ var dung_beetle = {
 		return css;
 	},
 	setMode: function(mode) {
-		this.elements.dung_beetle.find('button').removeClass('dung_active');
+		this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
 		switch(mode) {
 			// Set to inline console on HTML page
 			case this.console.MODES.INSET:
@@ -629,6 +628,11 @@ var dung_beetle = {
 		this.console.mode = mode;
 		this.stick();
 	},
+	trapError: function(evt) {
+		alert(evt.message);
+		evt.stopImmediatePropagation();
+		return false;
+	},
 	// The console object, gives us .log, .warn, .error
 	console: {
 		init: function(where, dung_beetle) {
@@ -641,8 +645,8 @@ var dung_beetle = {
 			this.elements.buttons = this.jq('<div></div>')
 				.html('<span class="dung_execute">Execute</span><span class="dung_clear">Clear</span>')
 				.attr('class', 'buttons').appendTo(where);
-			this.elements.input = this.jq('<textarea></textarea>').appendTo(this.dung.elements.dung_beetle);
-			this.elements.input.bind('keyup', this.dung.bind(this.keyEvent, this));
+			this.elements.input = this.jq('<textarea></textarea>').appendTo(this.dung.elements.dung_beetle)
+				.keypress(this.dung.bind(this.keyEvent, this));
 
 			try {
 				console = this;
@@ -673,8 +677,55 @@ var dung_beetle = {
 		/*warn: function() {
 
 		},*/
-		keyEvent: function(e) {
-			// take from consoleKeyEvent
+		keyEvent: function(evt) {
+			this.dung.getKeyPressed(evt);
+			if(this.mode != this.MODES.FULL_MULTI) {
+				this.elements.input.value(console_input.value.replace(/[\n\r]/g, ''));
+
+				if(evt.key == 'up') {
+					this.history_position = Math.max(this.history_position-1, 0);
+					this.elements.input.value(this.history[this.history_position]);
+				} else if(evt.key == 'down') {
+					this.history_position = Math.min(this.history_position+1, this.history.length-1);
+					this.elements.input.value(this.history[this.history_position]);
+				}
+			}
+			if(evt.key == 'enter') {
+				var val = this.elements.input.value();
+				if(val == 'clear()' || val == 'clear' || val == 'cls') {
+					this.history_position++;
+					this.history[console.history.length] = val;
+					this.elements.console.html('');
+					this.elements.input.value('');
+					return;
+				}
+				if(this.mode == this.MODES.INLINE || this.mode == this.MODES.FULL) {
+					this.elements.input.value(this.dung.trim(val));
+					this.history_position++;
+					this.history[this.history.length] = val;
+					this.history_position = this.history.length;
+					this.execute();
+					this.elements.input.value('');
+				} else if(evt.ctrlKey == true) {
+					this.elements.input.value(this.dung.trim(val));
+					this.execute();
+				}
+			}
+		},
+		execute: function() {
+			try {
+				var kids = this.elements.console.size();
+				var res = eval(this.elements.input.value());
+				this.log(res);
+				if(res) {
+				} else {
+					if(this.elements.console.size() == kids) {
+						//this.log('Evaluated: '+this.elements.input.value());
+					}
+				}
+			} catch(e) {
+				this.error(e);
+			}
 		},
 		// Recursive function to format an object for display in the console
 		formatObject: function(obj, depth) {
@@ -762,7 +813,8 @@ var dung_beetle = {
 			'Sienna', 'Silver', 'SkyBlue', 'SlateBlue', 'SlateGray', 'SlateGrey', 'Snow', 'SpringGreen', 'SteelBlue', 'Tan', 'Teal', 'Thistle', 'Tomato',
 			'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen'],
 		input_ac_words: ['top', 'bottom', 'left', 'right', 'center', '!important', 'solid', 'inset', 'ridge', 'none', 'dashed', 'dotted',
-			'relative', 'absolute', 'no-repeat', 'repeat-x', 'repeat-y', 'scroll', 'pointer', 'text']
+			'relative', 'absolute', 'no-repeat', 'repeat-x', 'repeat-y', 'scroll', 'pointer', 'text'],
+		keyLabels: { up: 38, down: 39, left: 40, right: 41, enter: 13, backspace: 8 }
 	},
 	elements: {
 		outlines: {
@@ -782,6 +834,16 @@ var dung_beetle = {
 		body: null,
 		current_element: null,
 		current_dom_node: null
+	},
+	getKeyPressed: function(evt) {
+		var code = evt.which || evt.charCode;
+		var k, c;
+		if(k = this.keyLabels[code]) {
+			evt.key = k;
+		} else if(c = String.fromCharCode(code)) {
+			evt.key = c;
+		}
+		return evt;
 	},
 	// Merges b in to a
 	merge: function(a, b) {
@@ -1075,53 +1137,9 @@ function consoleDblClick(event) {
 
 // Key handler for console
 function consoleKeyEvent(event) {
-	if(console.mode != 3) {
-		console_input.value = console_input.value.replace(/[\n\r]/g, '');
-
-		if(event.key == 'up') {
-			console.history_position = Math.max(console.history_position-1, 0);
-			console_input.value = console.history[console.history_position];
-		} else if(event.key == 'down') {
-			console.history_position = Math.min(console.history_position+1, console.history.length-1);
-			console_input.value = console.history[console.history_position];
-		}
-	}
-	if(event.key == 'enter' || (event.key == 'enter' && event.control  == true)) {
-		if(console_input.value.toString() == 'clear()' || console_input.value == 'clear' || console_input.value == 'cls') {
-			console.history_position++;
-			console.history[console.history.length] = console_input.value;
-			dung_console.innerHTML = '';
-			console_input.value = '';
-			return;
-		}
-		if(console.mode == 1 || console.mode == 2) {
-			console_input.value = console_input.value.trim();
-			console.history_position++;
-			console.history[console.history.length] = console_input.value;
-			console.history_position = console.history.length;
-			executeConsole();
-			console_input.value = '';
-		} else if(event.control == true) {
-			console_input.value = console_input.value.trim();
-			executeConsole();
-		}
-	}
 }
 
 function executeConsole() {
-	try {
-		var kids = dung_console.getChildren().length;
-		var res = eval(console_input.value);
-		if($defined(res)) {
-			console.log(res);
-		} else {
-			if( dung_console.getChildren().length == kids ) {
-				console.log('Evaluated: '+console_input.value);
-			}
-		}
-	} catch(e) {
-		console.error(e);
-	}
 }
 
 // Key event handler for all input fields when editing values. Determines action based on what input it is

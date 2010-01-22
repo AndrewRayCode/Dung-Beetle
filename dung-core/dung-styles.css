@@ -1,5 +1,5 @@
 /* Dung Beetle styles */
-.dung_beetle {font-family:Courier new, serif; font-size:8.5pt; position:fixed; bottom:0; left:0; background:#D7D9DE; z-index:900; overflow:hidden;}
+.dung_beetle {font-family:Courier new, serif; font-size:8.5pt; position:fixed; bottom:0; left:0; background:#eee; z-index:900; overflow:hidden;}
 .dung_tip {background:#ddeeff; border:1px dashed #666; padding:3px; display:none; position:absolute;}
 
 /* DOM viewing styles */
@@ -9,7 +9,7 @@
 .dung_padding {background:#8822EE;}
 .dung_margin {background:#99BBFF;}
 
-.dung_display {position:absolute; top:26px; left:2px; height:95px; width:800px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
+.dung_display {position:absolute; top:26px; left:2px; height:95px; width:800px; border:1px solid #8D98A1; border-top:0; background:#fff; overflow:auto;}
 .dung_styler {position:absolute; top:26px; left:806px; height:130px; width:100px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
 .dung_vertical_divide {height:132px; width:2px; border-left:1px solid #fff; border-right:1px solid #888; top:26px; left:804px; position:absolute; cursor:w-resize;}
 
@@ -27,24 +27,23 @@
 .dung_css_selector img:hover {cursor:pointer; background:red;}
 
 .edit_input {font-family:Courier new, serif; font-size:9pt; border:1px solid #aaaaff; margin:0; padding:0; clear:none;}
-.dung_resize {height:3px; cursor:s-resize; border-top:1px solid #7D8891; z-index:901;}
+.dung_resize {height:3px; cursor:s-resize; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -126px; border-top:1px solid #bbb; z-index:901;}
 .dung_attr_edit {color:#660033; cursor:text;}
 .dung_html_attr {color:#000099; cursor:text;}
 .dung_node {margin-left:20px; cursor:text;}
 .dung_tag_open, .dung_tag_close {color:#000099; cursor:pointer;}
 .dung_dom_selected.dung_tag_open, .dung_dom_selected.dung_tag_open span {background:#994372; color:#fff;}
-.dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd; border-bottom:1px solid #ccc; height:22px; position:absolute; top:3px; left:0; width:100%}
+.dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -126px; border-bottom:1px solid #bbb; height:22px; position:absolute; top:3px; left:0; width:100%}
 .dung_header span {font-weight:bold; color:#660033; position:absolute; left:5px; top:3px; }
 .dung_header span a {font-weight:bold; color:#660033;}
-.dung_header button {outline:none; font-size:9pt; width:100px; height:24px; margin:0; padding:0; border:1px solid #aaa; border-bottom:0 none; top:0; background:#eee; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
-.dung_header button.dung_inspect {left:85px; height:22px; border-bottom:1px solid #aaa !important;}
-.dung_header button.dung_inspect.dung_active {color:#fff; background:#883355;}
-.dung_header button.dung_console {left:190px;}
-.dung_header button.dung_html {left:295px;}
-.dung_header button.dung_dom {left:400px;}
-.dung_header button:hover {background:#fff;}
-.dung_header button.dung_active {background:#fff; color:#883355;}
-.dung_header button:focus, .dung_header button:active {-moz-outline-style:none !important;}
+.dung_header .dung_tab {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -126px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
+.dung_header .dung_tab.dung_inspect {padding:2px 0 0; left:85px; height:18px; border-bottom:1px solid #aaa !important;}
+.dung_header .dung_tab.dung_inspect.dung_active {color:#fff; background:#883355;}
+.dung_header .dung_tab.dung_console {left:190px;}
+.dung_header .dung_tab.dung_html {left:295px;}
+.dung_header .dung_tab.dung_dom {left:400px;}
+.dung_header .dung_tab:hover {background:#fff;}
+.dung_header .dung_tab.dung_active {background:#fff; color:#883355;}
 .dung_color_view {height:30px; width:30px; border:1px solid #888; display:none; position:absolute; z-index:9999;}
 div.dung_upsize:hover {cursor:pointer;}
 div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer;}
