@@ -69,7 +69,7 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_other {color:brown;}
 .dung_obj_lbl {color:#660033; font-weight:bold;}
 .dung_obj_lbl.dung_sub_obj {color:#666;}
-.dung_error, .dung_error span {color:#aa0000; background:#ffeeee;}
+.dung_error {color:#aa0000; background:#ffeeee;}
 .console_response {border-bottom:1px solid #ddd;}
 .console_buttons {height:22px; bottom:2px; left:808px; border-top:1px solid #fff; background:#D7D9DE; position:absolute; width:200px; display:none;}
 .console_buttons span {text-align:center; border:1px outset #fff; background:#ddd; width:50px; height:15px; top:3px; position:absolute; display:block; font-family:Trebuchet MS, sans-serif;}

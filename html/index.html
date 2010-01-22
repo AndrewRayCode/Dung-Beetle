@@ -34,23 +34,27 @@
 				<li>CSS editing</li>
 				<li>Provides console functions like console.log and console.error</li>
 			</ul>
-			<h3>What <i>isn't</i> Dung Beetle?</h3>
+			<h3 onclick="alert(moo);">What <i>isn't</i> Dung Beetle?</h3>
 			<ul>
 				<li>Not a JavaScript runtime debugger (unfortunately). It is built with pure JavaScript, and you can't debug JavaScript with external JavaScript.</li>
 				<li>Does not currently support complete DOM view, eg it doesn't relay information about DOM node events and functions such as 'onclick' and 'children'. Editing and viewing is only extended to what you normally would see with "view source."</li>
 			</ul>
-			<h3>What about Dragonfly/IE Developer Toolbar/Firebug lite/etc?</h3>
+			<h3 onclick="opera.postError('he')">What about Dragonfly/IE Developer Toolbar/Firebug lite/etc?</h3>
 			<p>It's true that there are many Firebug-like applications out there for different browsers. But if these alternatives were perfect then Dung Beetle wouldn't be under development. It is the opinion of the creator that despite the already existing toolkits, there could be something better for non-Firefox browsers. Besides, nothing wrong with another choice, right?</p>
 		</div>
 	</div>
 	<script type="text/javascript">
-		var dung_beetle = document.createElement('script');
-		dung_beetle.setAttribute('src','../dung-core/dung-core.js');
-		document.body.appendChild(dung_beetle);
+		var dung_script = document.createElement('script');
+		dung_script.setAttribute('src','../dung-core/dung-core.js');
+		dung_script.setAttribute('id','dung_script');
+		document.body.appendChild(dung_script);
 		(function() {
-			 if(window.dung_beetle.start){dung_beetle.start();}else{setTimeout(arguments.callee);}
+			 if(window.dung_beetle){dung_beetle.start();}else{setTimeout(arguments.callee);}
 		})();
-		void(dung_beetle);
+		void(dung_script);
+		function a() {
+			alert(b);
+		}
 	</script>
 </body>
 </html>
