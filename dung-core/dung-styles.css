@@ -19,9 +19,9 @@
 /* CSS view styles */
 .dung_pair input {width:10px;}
 .dung_pair div.cancel {margin:3px 3px 0;padding:0 3px; width:10px; height:10px; float:left;}
-.dung_pair div.cancel:hover {background:#888; background:url(dung_cancel_gray.gif) transparent top center no-repeat scroll; cursor:pointer;}
+.dung_pair div.cancel:hover {background:#888; background:url(dung_sprite.gif) transparent top center no-repeat scroll; cursor:pointer;}
 .dung_pair.canceled div.cancel,
-.dung_pair.canceled div.cancel:hover {background:url(dung_cancel.gif) transparent top center no-repeat scroll;}
+.dung_pair.canceled div.cancel:hover {background:url(dung_sprite.gif) transparent top center no-repeat scroll;}
 .dung_pair.canceled span {color:gray !important; text-decoration:line-through;}
 .dung_val {cursor:text; color:#660033;}
 .dung_attr {color:#3311DD;}
@@ -50,17 +50,17 @@
 .dung_color_view {height:30px; width:30px; border:1px solid #888; display:none; position:absolute; z-index:9999;}
 div.dung_upsize:hover {cursor:pointer;}
 div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer;}
-.dung_close {background:url(dung_icons.gif) 0 0 no-repeat scroll;}
+.dung_close {background:url(dung_sprite.gif) 0 0 no-repeat scroll;}
 .dung_close:hover {background-position:0 -15px;}
 .dung_close:active {background-position:0 -30px;}
 
 /* Console display styles */
 .dung_beetle textarea {font-size:8.5pt; width:790px; height:15px; bottom:2px; left:12px; border:1px solid #aaa; margin:0; padding:0; position:absolute;font-family:Courier new, serif; }
 .dung_cursor {width:10px; height:15px; bottom:2px; left:2px; color:#660033; border:1px solid #aaa; background:#fff; border-right:0 none; position:absolute; z-index:99999;}
-.dung_beetle .upsize {background:url(dung_icons.gif) 0 -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
+.dung_beetle .upsize {background:url(dung_sprite.gif) 0 -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
 .dung_beetle .upsize:hover {background-position:0 -60px;} 
 .dung_beetle .upsize:active {background-position:0 -75px;}
-.dung_beetle .downsize {background:url(dung_icons.gif) -15px -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
+.dung_beetle .downsize {background:url(dung_sprite.gif) -15px -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
 .dung_beetle .downsize:hover {background-position:-15px -60px;} 
 .dung_beetle .downsize:active {background-position:-15px -75px;}
 .dung_console {border:1px solid #aaa; height:15px; bottom:18px; left:2px; width:800px; background:#fff; font-weight:bold; position:absolute; overflow:auto;}
