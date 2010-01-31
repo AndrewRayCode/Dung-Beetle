@@ -13,13 +13,14 @@
 
 .dung_display {position:absolute; top:52px; left:2px; height:93px; width:800px; border:1px solid #8D98A1; border-top:0; background:#fff; overflow:auto;}
 .dung_tray {position:absolute; top:26px; left:0; height:25px; background:#fff; border-bottom:1px solid #ccc;}
-.dung_styler {position:absolute; top:26px; left:806px; height:130px; width:100px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
+.dung_styler {position:absolute; top:51px; left:806px; height:130px; width:100px; border:1px solid #8D98A1; background:#fff; overflow:auto;}
 .dung_vertical_divide {height:132px; width:2px; border-left:1px solid #fff; border-right:1px solid #888; top:26px; left:804px; position:absolute; cursor:w-resize;}
 
 /* CSS view styles */
 .dung_pair input {width:10px;}
-.dung_pair div.cancel {margin:3px 3px 0;padding:0 3px; width:10px; height:10px; float:left;}
-.dung_pair div.cancel:hover {background:#888; background:url(dung_sprite.gif) transparent top center no-repeat scroll; cursor:pointer;}
+.dung_style_cancel {margin:3px 3px 0;padding:0 3px; width:10px; height:10px; float:left;}
+.dung_style_cancel:hover {background:transparent url(dung_sprite.gif) -19px -61px no-repeat scroll; cursor:pointer;}
+.dung_pair {clear:both;}
 .dung_pair.canceled div.cancel,
 .dung_pair.canceled div.cancel:hover {background:url(dung_sprite.gif) transparent top center no-repeat scroll;}
 .dung_pair.canceled span {color:gray !important; text-decoration:line-through;}
@@ -28,6 +29,9 @@
 .dung_css_selector.canceled span, .dung_css_selector.canceled div {color:gray !important; background-color:#eee;}
 .dung_css_selector img {cursor:pointer; border:0 none; margin:0 8px;}
 .dung_css_selector img:hover {cursor:pointer; background:red;}
+.dung_style_header {float:left;}
+.dung_cancel_selector {background:transparent url(dung_sprite.gif) no-repeat scroll -19px -61px; float:left; height:10px; opacity:0.6; width:10px; filter:alpha(opacity=76); margin:2px 4px 0;}
+.dung_cancel_selector:hover {opacity:1.0; filter:alpha(opacity=100); cursor:pointer;}
 
 .edit_input {font-family:Courier new, serif; font-size:9pt; border:1px solid #aaaaff; margin:0; padding:0; clear:none;}
 .dung_resize {height:3px; cursor:s-resize; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -126px; border-top:1px solid #bbb; z-index:901;}

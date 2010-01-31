@@ -307,7 +307,7 @@ var dung_beetle = {
 
 		if(this.console.mode == this.console.MODES.INSET) {
 			this.elements.vertical_divide.css('height', Math.max(height-28, 0)+'px');
-			this.elements.styler.css({'width':width_after_divide+'px', 'left':(v_pos+3)+'px', 'height':Math.max(height-30, 0)+'px'});
+			this.elements.styler.css({'width':width_after_divide+'px', 'left':(v_pos+3)+'px', 'height':Math.max(height-55, 0)+'px'});
 			this.elements.display.css({'width':width_before_divide+'px', 'height':Math.max(height-87, 0)+'px'});
 			this.console.elements.input.css('width', (width_before_divide-10)+'px');
 			this.console.elements.console.css('width', width_before_divide+'px');
@@ -414,13 +414,13 @@ var dung_beetle = {
 		var full_selector = this.getFullSelector(current_element);
 		var element_selector = this.getSelector(current_element);
 
-		var str = '<div class="dung_css_selector"><div class="css_title"><span>element.style</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>';
+		var str = '<div class="dung_css_selector"><div class="dung_style_header">element.style</div><div class="dung_cancel_selector" alt="Cancel this CSS Selector"></div>{</div>';
 		if(elem.attr('style')) {
 			var styles = elem.attr('style').split(';');
 			for(var x=0; x<styles.length; x++) {
 				if(this.trim(styles[x])) {
 					var pair = styles[x].split(':');
-					str += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+this.colorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
+					str += '<div class="dung_pair"><div class="dung_style_cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()+'</span>: <span class="dung_val">'+this.colorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
 				}
 			}
 		}
@@ -433,15 +433,16 @@ var dung_beetle = {
 			for(var rule in this.CSS[stylesheet]) {
 				if(this.matchFullSelector(rule, full_selector)) {
 					css_styles[css_styles.length] = {
-						weight: this.getSelectorWeight(rule, element_selector), 'html':'<div class="dung_css_selector"><div class="css_title"><span>'+rule
-							+'</span><span><img src="dung_cancel_gray.gif" alt="Cancel this CSS Selector"/>{</span></div>'
+						weight: this.getSelectorWeight(rule, element_selector), 'html':'<div class="dung_css_selector"><div class="dung_style_header">'
+							+'<div class="dung_style_header">'+rule+'</div>'
+							+'<div class="dung_cancel_selector" alt="Cancel this CSS Selector"></div>{</div>'
 					};
 					var rules = this.CSS[stylesheet][rule].split('; ');
 					for(var x=0; x<rules.length; x++) {
 						if(rules[x].length > 0) {
 							var pair = rules[x].split(':');
 							if(pair[0].indexOf('-moz') == -1) {
-								css_styles[css_styles.length-1]['html'] += '<div class="dung_pair"><div class="cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()
+								css_styles[css_styles.length-1]['html'] += '<div class="dung_pair"><div class="dung_style_cancel"></div><span class="dung_attr">'+pair[0].toLowerCase()
 									+'</span>: <span class="dung_val">'+this.colorize(pair[1].toLowerCase().replace(';', ''))+'</span>;</div>';
 							}
 						}
@@ -511,6 +512,44 @@ var dung_beetle = {
 			this.elements.outlines.left.css('display', 'none');
 		}
 	}, 
+	dungTree: {
+		init: function(papa, options) {
+			this.elements = {};
+			this.jq = options.jq;
+			this.jq('<div></div>').addClass('dung_tree').appendTo(papa);
+			return this;
+		},
+		parseTopLevel: function() {
+
+			return this;
+		},
+		expandToNode: function(node) {
+
+			return this;
+		},
+		node: {
+			create: function(options) {
+				this.jq = options.jq;
+				this.main = this.jq('<div></div>').addClass('dung_node').appendTo(options.papa);
+				this.toggle = this.jq('<div></div>').addClass('dung_toggle closed').appendTo(this.main);
+			},
+			toggle: function() {
+				if(this.isOpen) {
+					this.collapse();
+				} else {
+					this.expand();
+				}
+			},
+			expand: function() {
+				if(this.isOpen) return;
+				this.isOpen = true;
+			},
+			collapse: function() {
+				if(!this.isOpen) return;
+				this.isOpen = false;
+			}
+		}
+	},
 	stop: function(event) {
 		this.dungstatus.enabled = false;
 		this.stopDOMInspection();
@@ -621,7 +660,7 @@ var dung_beetle = {
 	},
 	// Handles click on the actual page. Only active at certain times
 	bodyClickEvent: function(evt) {
-		if(!this.dungstatus.realtime_insepct || /dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
+		if(!this.dungstatus.realtime_inspect || /dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
 			return;
 		}
 
@@ -771,7 +810,7 @@ var dung_beetle = {
 		log: function() {
 			this.addToConsole(arguments);
 		},
-		error: function() {
+		berror: function() {
 			this.addToConsole(arguments, 'dung_error');
 		},
 		warn: function() {
@@ -1051,6 +1090,12 @@ var dung_beetle = {
 	},
 	trim: function(str){
 		return str.replace(/^\s+|\s+$/g, '');
+	},
+	// Custom sort function for comparing CSS inheritence/importance
+	weightedSort: function(a, b) {
+		if (a.weight < b.weight) return 1;
+		if (a.weight > b.weight) return -1;
+		return 0;
 	}
 };
 
@@ -1420,15 +1465,6 @@ function isValidCSSAttr(str) {
 		}
 	}
 	return false;
-}
-
-// Custom sort function for comparing CSS inheritence/importance
-function weightedSort(a, b) {
-	if ( a.weight < b.weight )
-		return 1;
-	if ( a.weight > b.weight )
-		return -1;
-	return 0;
 }
 
 // Auto-complete for input fields. Suggestions come from object
