@@ -86,7 +86,7 @@ var dung_beetle = {
 			.appendTo('body');
 
 		this.merge(this.elements, this.injectClassedDivsTo(
-			['resize', 'display', 'styler', 'header', 'cursor', 'upsize', 'vertical_divide', 'tray', 'logo', 'close', 'inspect'],
+			['resize', 'display', 'styler', 'header', 'cursor', 'upsize', 'vertical_divide', 'tray', 'logo', 'close', 'updown', 'windowed', 'inspect'],
 			this.elements.dung_beetle
 		));
 		this.elements.logo.attr('title', 'More Information about Dung Beetle (opens in new window)').click(this.bind(this.spamThemAll, this));
@@ -110,7 +110,9 @@ var dung_beetle = {
 		this.tabs.html.bind('click', this.bind(this.showHtmlTab, this));
 		this.tabs.dom.bind('click', this.bind(this.showDomTab, this));
 
-		this.jq('#dung_close').bind('click', this.bind(this.stop, this));
+		this.elements.close.bind('click', this.bind(this.stop, this));
+		this.elements.updown.bind('click', this.bind(this.toggleUpDown, this));
+		this.elements.windowed.bind('click', this.bind(this.maximize, this));
 
 		this.elements.upsize.bind('click', this.bind(this.toggleUpsize, this));
 
@@ -147,6 +149,36 @@ var dung_beetle = {
 			'onDrag':function() { stickConsole(); }
 		});
 		*/
+		if(this.jq.browser.opera) {
+			// Opera doesn't implement onerror but has it's own API http://dragonfly.opera.com/app/scope-interface/scope-dom-interface.html
+			var connected = function(services) {
+				for (var service in services) {
+					if (service.substring(0, 5) == "stp-0") {
+						alert("Connected to STP/1 host but using STP/0 fallback");
+						return;
+					} else if (service == "stp-1") {
+						alert("Connected to STP/1 host");
+						return;
+					}
+					alert("Connected to STP/0 host");
+				}
+			}
+			var receive = function(service, message, command, status, tag) {
+				if (status != 0) {
+					alert("Error in command " + command);
+					return;
+				}
+				if (tag != 0) {
+					// Handle response to previous command
+				} else {
+					// Handle event
+				}
+			}
+			var quit = function() {};
+			console.log(opera);
+			//opera.scopeAddClient(connected, receive, quit, 0);
+		}
+	
 	},
 	toggleUpsize: function() {
 		if(this.console.mode == this.console.MODES.FULL) {
@@ -488,6 +520,12 @@ var dung_beetle = {
 		this.elements.outlines.right.remove();
 		this.elements.outlines.left.remove();
 		this.elements.dung_push.remove();
+	},
+	toggleUpDown: function() {
+		alert('down boy!');
+	},
+	maximize: function() {
+		alert('here boy!');
 	},
 	showOutlines: function() {
 		if(this.elements.outlines.top.css('display') == 'none') {
