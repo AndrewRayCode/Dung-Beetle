@@ -63,7 +63,7 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_node {margin-left:20px; cursor:text;}
 .dung_tag_start, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
 .dung_tag_end {clear:both;}
-.dung_dom_selected.dung_tag_open, .dung_dom_selected.dung_tag_open span {background:#994372; color:#fff;}
+.dung_dom_selected.dung_tag_start, .dung_dom_selected.dung_tag_start span {background:#994372; color:#fff;}
 .dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; cursor:pointer;}
 .dung_node_toggle.closed {background-position:0 -60px;}
 .dung_node {clear:both;}

@@ -125,7 +125,7 @@ var dung_beetle = {
 		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
 
 		this.checkCSSLoaded();
-		this.dom_tree = new this.dungTree(this.elements.display, {
+		this.tree = new this.dungTree(this.elements.display, {
 			jq: this.jq,
 			dung: this
 		}).parseTopLevel();
@@ -328,10 +328,9 @@ var dung_beetle = {
 	},
 	// Given an element in the body, highlight the respective element in the DOM view
 	highlightInDOMView: function(element) {
-		var view_element = this.findInDOMView(element[0]);
-		this.current_dom_node = this.jq(view_element.children()[0]);
-		this.current_dom_node.addClass('dung_dom_selected');
-		this.scrollTo(this.elements.display, this.current_dom_node[0].dung_position);
+		var node = this.tree.expandToElement(element[0]);
+		node.tag_open.addClass('dung_dom_selected');
+		this.scrollTo(this.elements.display, node.dung_position);
 	},
 	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
 	findInDOMView: function(element, papa) {
@@ -537,12 +536,59 @@ var dung_beetle = {
 					jq: tree.jq,
 					papa: tree,
 					dom_node: tree.dung.jq('body')[0]
-				}).expand(2);
+				}).expand();
 			}
 			return this;
 		};
-		this.expandToNode = function(node) {
-			return this;
+		this.expandToElement = function(element, papa) {
+			for(var x=0, l=tree.head.children.length; x<l; x++) {
+				tree.head.children[x].collapse();
+			}
+			for(var x=0, l=tree.body.children.length; x<l; x++) {
+				tree.body.children[x].collapse();
+			}
+			var findme = element;
+			var path = [findme];
+			var searching = true;
+			var found;
+			while(searching) {
+				findme = findme.parentNode;
+				path.push(findme);
+				for(var x=0, l=tree.body.children.length; x<l; x++) {
+					if(findme == tree.body.children[x].dom_node) {
+						found = tree.body.children[x];
+						searching = false;
+						break;
+					}
+				}
+			}
+			var matched = found.expand();
+			for(var x=path.length-1; x>=0; x--) {
+				for(var y=0, l=found.children.length; y<l; y++) {
+					if(found.children[y].dom_node == path[x]) {
+						console.error('We expanded ',found,found.main,found.dom_node);
+						found = found.children[y].expand();
+						break;
+					}
+				}
+			}
+			return found;
+		};
+		this.findByElement = function(element, papa) {
+			var found = false;
+			if(!papa) papa = stroller;
+
+			if(papa.hover_highlight == element) {
+				return this.jq(papa);
+			} else {
+				var nodes = papa.children;
+				for(var x=0, l=nodes.lenth; x<l; x++) {
+					var find = this.findByElement(element, nodes[x]);
+					if(find) return this.jq(find);
+				}
+			}
+		
+			return false;
 		};
 		this.node = function(options) {
 			this.jq = options.jq;
@@ -553,7 +599,7 @@ var dung_beetle = {
 			this.tag_open = this.jq('<div></div>').addClass('dung_tag_start').text('<'+this.tag_name).appendTo(this.main);
 			this.dung_position = this.main.position().top - this.jq('body').scrollTop();
 			this.children = [];
-			var node = this;
+			this.tree = tree;
 			
 			var attributes = tree.dung.getElementAttributes(this.dom_node);
 			var styles = '';
@@ -563,55 +609,55 @@ var dung_beetle = {
 						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
 				}
 			}
-			this.tag_open.html(this.tag_open.html() + styles+'>');
-
-			this.addChild = function(child) {
-				if(!node.expanded) {
-					node.setExpanded();
+			this.tag_open.html(this.tag_open.html() + styles+'&gt;');
+			this.toggle_btn.click(tree.dung.bind(this.toggle, this));
+		}
+		this.node.prototype.addChild = function(child) {
+			if(!this.expanded) {
+				this.setExpanded();
+			}
+			child.appendTo(this.stroller);
+		};
+		this.node.prototype.toggle = function() {
+			if(this.expanded) {
+				this.collapse();
+			} else {
+				this.expand();
+			}
+		};
+		this.node.prototype.setExpanded = function() {
+			this.toggle_btn.toggleClass('closed');
+			this.stroller = this.jq('<div></div>').addClass('dung_children').appendTo(this.main);
+			this.closeTag = this.jq('<div></div>').addClass('dung_tag_end').text('</'+this.tag_name+'>').appendTo(this.main);
+			this.expanded = true;
+		};
+		this.node.prototype.expand = function(depth) {
+			var expand = tree.dung.type(depth) == 'number' && depth > 0 ? true : false;
+			if(this.expanded) return this;
+			this.setExpanded();
+			this.expanded = true;
+			var kids = this.jq(this.dom_node).children();
+			for(var x=0, l=kids.length; x<l; x++) {
+				if(tree.dung.jq(kids[x]).attr('class').match('dung')) {
+					break;
 				}
-				child.appendTo(node.stroller);
-			};
-			this.toggle = function() {
-				if(node.expanded) {
-					node.collapse();
-				} else {
-					node.expand();
+				// TODO: Do I really want to create myself inside myself? tree.node feels dirty
+				this.children.push(new this.tree.node({
+					jq: this.jq,
+					papa: this,
+					dom_node: kids[x]
+				}));
+				if(expand) {
+					this.children[this.children.length-1].expand(depth - 1);
 				}
-			};
-			this.setExpanded = function() {
-				node.toggle_btn.toggleClass('closed');
-				node.stroller = node.jq('<div></div>').addClass('dung_children').appendTo(node.main);
-				node.closeTag = node.jq('<div></div>').addClass('dung_tag_end').text('</'+node.tag_name+'>').appendTo(node.main);
-				node.expanded = true;
-			};
-			this.expand = function(depth) {
-				var expand = tree.dung.type(depth) == 'number' && depth > 0 ? true : false;
-				if(node.expanded) return;
-				node.setExpanded();
-				node.expanded = true;
-				var kids = node.jq(node.dom_node).children();
-				for(var x=0, l=kids.length; x<l; x++) {
-					if(tree.dung.jq(kids[x]).attr('class').match('dung')) {
-						break;
-					}
-					// TODO: Do I really want to create myself inside myself? tree.node feels dirty
-					node.children.push(new tree.node({
-						jq: node.jq,
-						papa: node,
-						dom_node: kids[x]
-					}));
-					if(expand) {
-						node.children[node.children.length-1].expand(depth - 1);
-					}
-				}
-
-			};
-			this.collapse = function() {
-				if(!node.expanded) return;
-				node.expanded = false;
-				this.stroller.empty();
-				this.closeTag.remove();
-			};
+			}
+			return this;
+		};
+		this.node.prototype.collapse = function() {
+			if(!this.expanded) return this;
+			this.expanded = false;
+			this.stroller.remove();
+			this.closeTag.remove();
 		};
 		return this;
 	},
@@ -748,8 +794,6 @@ var dung_beetle = {
 		this.elements.inspect.removeClass('dung_active');
 		this.hideOutlines();
 		this.dungstatus.realtime_inspect = false;
-		this.jq('body').unbind('click', this.bind(this.bodyClickEvent, this));
-		this.jq('body').unbind('mouseover', this.bind(this.bodyHoverEvent, this));
 	},
 	startDOMInspection: function() {
 		//Start DOM inspection
@@ -757,8 +801,6 @@ var dung_beetle = {
 		this.dungstatus.realtime_inspect = true;
 		this.dungstatus.indung_lock = false;
 		this.showOutlines();
-		this.jq('body').bind('click', this.bind(this.bodyClickEvent, this));
-		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
 	},
 	checkCSSLoaded: function() {
 		for(var x=0; x <document.styleSheets.length; x++) {
