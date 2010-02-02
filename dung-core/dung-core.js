@@ -124,9 +124,11 @@ var dung_beetle = {
 		this.jq(window).bind('resize', this.bind(this.stick, this));
 		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
 
-		this.displayDom();
 		this.checkCSSLoaded();
-		this.displayDOM();
+		this.dom_tree = new this.dungTree(this.elements.display, {
+			jq: this.jq,
+			dung: this
+		}).parseTopLevel();
 
 		//TODO: Why don't browsers stick properly the first time?
 		setTimeout(this.bind(this.stick, this), 10);
@@ -512,43 +514,106 @@ var dung_beetle = {
 			this.elements.outlines.left.css('display', 'none');
 		}
 	}, 
-	dungTree: {
-		init: function(papa, options) {
-			this.elements = {};
-			this.jq = options.jq;
-			this.jq('<div></div>').addClass('dung_tree').appendTo(papa);
-			return this;
-		},
-		parseTopLevel: function() {
+	dungTree: function(papa, options) {
+		this.elements = {};
+		this.jq = options.jq;
+		var tree = this;
+		tree.dung = options.dung;
+		this.stroller = this.jq('<div></div>').addClass('dung_tree').appendTo(papa);
 
-			return this;
-		},
-		expandToNode: function(node) {
+		this.parseTopLevel = function(element) {
+			if(element) {
 
-			return this;
-		},
-		node: {
-			create: function(options) {
-				this.jq = options.jq;
-				this.main = this.jq('<div></div>').addClass('dung_node').appendTo(options.papa);
-				this.toggle = this.jq('<div></div>').addClass('dung_toggle closed').appendTo(this.main);
-			},
-			toggle: function() {
-				if(this.isOpen) {
-					this.collapse();
-				} else {
-					this.expand();
+			} else {
+				var head = tree.dung.jq('head');
+				if(head.length) {
+					tree.head = new tree.node({
+						jq: tree.jq,
+						papa: tree,
+						dom_node: head[0]
+					}).expand();
 				}
-			},
-			expand: function() {
-				if(this.isOpen) return;
-				this.isOpen = true;
-			},
-			collapse: function() {
-				if(!this.isOpen) return;
-				this.isOpen = false;
+				tree.body = new tree.node({
+					jq: tree.jq,
+					papa: tree,
+					dom_node: tree.dung.jq('body')[0]
+				}).expand(2);
 			}
-		}
+			return this;
+		};
+		this.expandToNode = function(node) {
+			return this;
+		};
+		this.node = function(options) {
+			this.jq = options.jq;
+			this.dom_node = options.dom_node;
+			this.tag_name = this.dom_node.nodeName.toLowerCase();
+			this.main = this.jq('<div></div>').addClass('dung_node').appendTo(options.papa.stroller);
+			this.toggle_btn = this.jq('<div></div>').addClass('dung_node_toggle closed').appendTo(this.main);
+			this.tag_open = this.jq('<div></div>').addClass('dung_tag_start').text('<'+this.tag_name).appendTo(this.main);
+			this.dung_position = this.main.position().top - this.jq('body').scrollTop();
+			this.children = [];
+			var node = this;
+			
+			var attributes = tree.dung.getElementAttributes(this.dom_node);
+			var styles = '';
+			if(attributes.length) {
+				for(var x=0; x<attributes.length; x++) {
+					styles += '<span class="dung_html_attr"> <span class="dung_html_prop">'+attributes[x].nodeName+'</span>="'
+						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
+				}
+			}
+			this.tag_open.html(this.tag_open.html() + styles+'>');
+
+			this.addChild = function(child) {
+				if(!node.expanded) {
+					node.setExpanded();
+				}
+				child.appendTo(node.stroller);
+			};
+			this.toggle = function() {
+				if(node.expanded) {
+					node.collapse();
+				} else {
+					node.expand();
+				}
+			};
+			this.setExpanded = function() {
+				node.toggle_btn.toggleClass('closed');
+				node.stroller = node.jq('<div></div>').addClass('dung_children').appendTo(node.main);
+				node.closeTag = node.jq('<div></div>').addClass('dung_tag_end').text('</'+node.tag_name+'>').appendTo(node.main);
+				node.expanded = true;
+			};
+			this.expand = function(depth) {
+				var expand = tree.dung.type(depth) == 'number' && depth > 0 ? true : false;
+				if(node.expanded) return;
+				node.setExpanded();
+				node.expanded = true;
+				var kids = node.jq(node.dom_node).children();
+				for(var x=0, l=kids.length; x<l; x++) {
+					if(tree.dung.jq(kids[x]).attr('class').match('dung')) {
+						break;
+					}
+					// TODO: Do I really want to create myself inside myself? tree.node feels dirty
+					node.children.push(new tree.node({
+						jq: node.jq,
+						papa: node,
+						dom_node: kids[x]
+					}));
+					if(expand) {
+						node.children[node.children.length-1].expand(depth - 1);
+					}
+				}
+
+			};
+			this.collapse = function() {
+				if(!node.expanded) return;
+				node.expanded = false;
+				this.stroller.empty();
+				this.closeTag.remove();
+			};
+		};
+		return this;
 	},
 	stop: function(event) {
 		this.dungstatus.enabled = false;

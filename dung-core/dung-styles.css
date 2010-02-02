@@ -35,15 +35,10 @@
 
 .edit_input {font-family:Courier new, serif; font-size:9pt; border:1px solid #aaaaff; margin:0; padding:0; clear:none;}
 .dung_resize {height:3px; cursor:s-resize; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -126px; border-top:1px solid #bbb; z-index:901;}
-.dung_attr_edit {color:#660033; cursor:text;}
-.dung_html_attr {color:#000099; cursor:text;}
-.dung_node {margin-left:20px; cursor:text;}
-.dung_tag_open, .dung_tag_close {color:#000099; cursor:pointer;}
-.dung_dom_selected.dung_tag_open, .dung_dom_selected.dung_tag_open span {background:#994372; color:#fff;}
-.dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -126px; border-bottom:1px solid #bbb; height:22px; position:absolute; top:3px; left:0; width:100%}
+.dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -100px; border-bottom:1px solid #bbb; height:22px; position:absolute; top:3px; left:0; width:100%}
 .dung_header span {font-weight:bold; color:#660033; position:absolute; left:5px; top:3px; }
 .dung_header span a {font-weight:bold; color:#660033;}
-.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -126px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
+.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -100px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
 .dung_header .dung_inspect {padding:1px 0 0; left:50px; height:17px; !important; top:0; width:80px; border-color:#ccc #888 #777 #ccc;}
 .dung_header .dung_inspect.dung_active {color:#fff; background:#883355;}
 .dung_header .dung_tab.dung_console {left:190px;}
@@ -61,6 +56,17 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_close:active {background-position:-15px 0;}
 .dung_updown:active {background-position:-15px -15px;}
 .dung_windowed:active {background-position:-15px -30px;}
+
+/* Dung Tree styles */
+.dung_attr_edit {color:#660033; cursor:text;}
+.dung_html_attr {color:#000099; cursor:text;}
+.dung_node {margin-left:20px; cursor:text;}
+.dung_tag_start, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
+.dung_tag_end {clear:both;}
+.dung_dom_selected.dung_tag_open, .dung_dom_selected.dung_tag_open span {background:#994372; color:#fff;}
+.dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; cursor:pointer;}
+.dung_node_toggle.closed {background-position:0 -60px;}
+.dung_node {clear:both;}
 
 /* Console display styles */
 .dung_beetle textarea {font-size:8.5pt; width:790px; height:15px; bottom:2px; left:12px; border:1px solid #aaa; margin:0; padding:0; position:absolute;font-family:Courier new, serif; }
