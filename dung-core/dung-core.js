@@ -591,14 +591,24 @@ var dung_beetle = {
 		this.node = function(options) {
 			this.jq = options.jq;
 			this.dom_node = options.dom_node;
+			this.children = [];
+			this.tree = tree;
+			var type = this.tree.dung.type(this.dom_node);
+			if(type == 'whitespace') {
+				return;
+			} else if(type == 'textnode') {
+				if(this.dom_node.nodeValue) {
+					var text = this.jq('<div></div>').addClass('dung_text_node').text(this.dom_node.nodeValue).appendTo(options.papa.stroller);
+				}
+				return;
+			}
 			this.tag_name = this.dom_node.nodeName.toLowerCase();
 			this.main = this.jq('<div></div>').addClass('dung_node').appendTo(options.papa.stroller);
 			this.toggle_btn = this.jq('<div></div>').addClass('dung_node_toggle closed').appendTo(this.main);
 			this.tag_open = this.jq('<div></div>').addClass('dung_tag_start').text('<'+this.tag_name).appendTo(this.main);
 			this.dung_position = this.main.position().top - this.jq('body').scrollTop();
-			this.children = [];
-			this.tree = tree;
-			
+
+			//text.hover_highlight = element.parentNode;
 			var attributes = tree.dung.getElementAttributes(this.dom_node);
 			var styles = '';
 			if(attributes.length) {
@@ -634,12 +644,12 @@ var dung_beetle = {
 			if(this.expanded) return this;
 			this.setExpanded();
 			this.expanded = true;
-			var kids = this.jq(this.dom_node).children();
+			var kids = this.jq(this.dom_node).contents();
 			for(var x=0, l=kids.length; x<l; x++) {
-				if(tree.dung.jq(kids[x]).attr('class').match('dung')) {
+				if(/dung/.test(this.jq(kids[x]).attr('class'))) {
 					break;
 				}
-				// TODO: Do I really want to create myself inside myself? tree.node feels dirty
+				// TODO: Do I really want to create myself inside myself? this.tree.node feels dirty
 				this.children.push(new this.tree.node({
 					jq: this.jq,
 					papa: this,
@@ -734,14 +744,17 @@ var dung_beetle = {
 		} else {
 			mixed.stopPropagation();
 			elem = this.jq(mixed.target);
-			if(elem.className && elem.className.match('dung')) {return;}
+			if(elem.className && elem.className.match('dung')) return;
 
 			if(this.dungstatus.indung_lock != true) {
-				if(this.current_dom_node) {
-					this.current_dom_node.removeClass('dung_dom_selected');
-				}
-				this.highlightInDOMView(elem);
-				this.inspectElement(mixed);
+				var me = this;
+				this.triggerTimeoutEvent(function() {
+					if(me.current_dom_node) {
+						me.current_dom_node.removeClass('dung_dom_selected');
+					}
+					me.highlightInDOMView(elem);
+					me.inspectElement(mixed);
+				}, this.settings.inspect_delay);
 			}
 		}
 
@@ -776,15 +789,18 @@ var dung_beetle = {
 
 		this.dungstatus.indung_lock = true;
 
+		
 		if(this.current_dom_node) {
 			this.current_dom_node.removeClass('dung_dom_selected');
 		}
 
-		if(!evt.target.className || !/dung/.test(evt.target.className)) {
-			this.inspectElement(evt);
-			this.highlightInDOMView(this.jq(evt.target));
-		} else {
-			this.highlightInDOMView(this.current_element);
+		if(this.current_element && evt.target != this.current_element[0]) {
+			if(!evt.target.className || !/dung/.test(evt.target.className)) {
+				this.inspectElement(evt);
+				this.highlightInDOMView(this.jq(evt.target));
+			} else {
+				this.highlightInDOMView(this.current_element);
+			}
 		}
 		this.stopDOMInspection();
 	},
@@ -1045,6 +1061,7 @@ var dung_beetle = {
 		trap_errors: false,
 		tab_width: 105,
 		tab_offset: 140,
+		inspect_delay: 300,
 		my_site: 'http://andrewray.me/dung-beetle/index.html'
 	},
 	input: {
@@ -1202,6 +1219,12 @@ var dung_beetle = {
 		if (a.weight < b.weight) return 1;
 		if (a.weight > b.weight) return -1;
 		return 0;
+	},
+	triggerTimeoutEvent: function(func, timeout) {
+		if(this.uncalled) {
+			clearTimeout(this.uncalled); 
+		}
+		this.uncalled = setTimeout(this.bind(func, this), timeout);
 	}
 };
 
