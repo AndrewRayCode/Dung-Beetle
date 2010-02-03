@@ -116,13 +116,12 @@ var dung_beetle = {
 
 		this.elements.upsize.bind('click', this.bind(this.toggleUpsize, this));
 
-		this.elements.dung_beetle.bind('click', this.bind(this.dungClick, this));
-		this.elements.dung_beetle.bind('mouseover', this.bind(this.hoverEvent, this));
-		this.elements.dung_beetle.bind('dblclick', this.bind(this.dblClickEvent, this));
+		this.elements.dung_beetle.bind('click', this.bind(this.dungClick, this))
+			.bind('mouseover', this.bind(this.hoverEvent, this))
+			.bind('dblclick', this.bind(this.dblClickEvent, this));
 
-		this.jq(window).bind('scroll', this.bind(this.stick, this));
-		this.jq(window).bind('resize', this.bind(this.stick, this));
-		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this));
+		this.jq(window).bind('scroll', this.bind(this.stick, this)).bind('resize', this.bind(this.stick, this));
+		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this)).click(this.bind(this.bodyClickEvent, this));
 
 		this.checkCSSLoaded();
 		this.tree = new this.dungTree(this.elements.display, {
@@ -330,7 +329,7 @@ var dung_beetle = {
 	highlightInDOMView: function(element) {
 		var node = this.tree.expandToElement(element[0]);
 		node.tag_open.addClass('dung_dom_selected');
-		this.scrollTo(this.elements.display, node.dung_position);
+		this.scrollTo(this.elements.display, node.main);
 	},
 	// Returns div containing view element in DOM viewer (returns "tag_open" div of found DOM node)
 	findInDOMView: function(element, papa) {
@@ -411,9 +410,9 @@ var dung_beetle = {
 		} else {
 			elem = this.jq(mixed);
 		}
-		current_element = /dung/.test(elem.className) ? current_element : elem;
-		var full_selector = this.getFullSelector(current_element);
-		var element_selector = this.getSelector(current_element);
+		this.current_element = /dung/.test(elem.className) ? this.current_element : elem;
+		var full_selector = this.getFullSelector(this.current_element);
+		var element_selector = this.getSelector(this.current_element);
 
 		var str = '<div class="dung_css_selector"><div class="dung_style_header">element.style</div><div class="dung_cancel_selector" alt="Cancel this CSS Selector"></div>{</div>';
 		if(elem.attr('style')) {
@@ -566,7 +565,6 @@ var dung_beetle = {
 			for(var x=path.length-1; x>=0; x--) {
 				for(var y=0, l=found.children.length; y<l; y++) {
 					if(found.children[y].dom_node == path[x]) {
-						console.error('We expanded ',found,found.main,found.dom_node);
 						found = found.children[y].expand();
 						break;
 					}
@@ -658,6 +656,7 @@ var dung_beetle = {
 			this.expanded = false;
 			this.stroller.remove();
 			this.closeTag.remove();
+			this.children = [];
 		};
 		return this;
 	},
@@ -748,7 +747,7 @@ var dung_beetle = {
 
 		if(!/dung/.test(elem.className) && elem != document.body) {
 			var pos = elem.offset();
-			var size = {x: elem.width(), y: elem.height()};
+			var size = {x: elem.outerWidth(), y: elem.outerHeight()};
 
 			this.elements.outlines.top.css({'top':pos.top, 'left':pos.left, 'width':size.x});
 			this.elements.outlines.bottom.css({'top':pos.top+size.y, 'left':pos.left, 'width':(parseInt(size.x)+2)+'px'});
@@ -1144,7 +1143,7 @@ var dung_beetle = {
 	},
 	scrollTo: function(elem, to, time) {
 		time = time || 200;
-		var target = this.type(to) == 'number' ? to : this.jq(to).position().top;
+		var target = this.type(to) == 'number' ? to : this.jq(to).offset().top + (elem.scrollTop() - elem.offset().top);
 		elem.animate({scrollTop: target}, {queue:false, duration:time});
 	},
 	// Add spans to tags for color hovering
