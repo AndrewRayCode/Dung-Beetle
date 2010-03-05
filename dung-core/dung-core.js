@@ -799,8 +799,10 @@ window.dung_beetle = {
 			loc = styleSheet.href || x;
 			css[loc] = {};
 			var rules = styleSheet.rules || styleSheet.cssRules;
-			for(var i=0; i<rules.length; i++) {;
-				css[loc][rules[i]['selectorText']] = rules[i]['style']['cssText'];
+			for(var i=0; i<rules.length; i++) {
+                if(rules[i]) {
+                    css[loc][rules[i].selectorText] = rules[i].style.cssText;
+                }
 			}
 		}
 		return css;
