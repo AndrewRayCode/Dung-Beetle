@@ -1,4 +1,3 @@
-<?php header('Access-Control: allow <*>'); ?>
 /*
 * Javascript based DOM/CSS inspector by Andrew Ray
 * AndrewRay.me
@@ -27,7 +26,7 @@ var dung_beetle = {
 			right: this.jq('<div></div>').attr('class', 'dung_padding').appendTo('body'),
 			bottom: this.jq('<div></div>').attr('class', 'dung_padding').appendTo('body'),
 			left: this.jq('<div></div>').attr('class', 'dung_padding').appendTo('body')
-		}
+		};
 		this.elements.margin = {
 			top: this.jq('<div></div>').attr('class', 'dung_margin').appendTo('body'),
 			right: this.jq('<div></div>').attr('class', 'dung_margin').appendTo('body'),
@@ -55,7 +54,7 @@ var dung_beetle = {
 		this.elements.logo.attr('title', 'More Information about Dung Beetle (opens in new window)').click(this.bind(this.spamThemAll, this));
 		this.registerTabs([{
 				label: 'console',
-				text: 'Console',
+				text: 'Console'
 			},{
 				label: 'html',
 				text: 'HTML',
@@ -95,24 +94,6 @@ var dung_beetle = {
 		//TODO: Why don't browsers stick properly the first time?
 		setTimeout(this.bind(this.stick, this), 10);
 
-		/* // TODO: Gotta port this!
-		dung_beetle.makeResizable({
-			'handle': dung_resize,
-			'modifiers':{'x':false, 'y': 'top'},
-			'onDrag': function() {
-				this.limit = {'y':[1, (window.getSize().y.toInt() + window.getScroll().y.toInt())]};
-				var height = window.getSize().y.toInt() - dung_beetle.getStyle('top').toInt() + window.getScroll().y.toInt();
-				dung_beetle.setStyle('height', height+'px');
-				stickConsole();
-				dung_push.setStyle('height', height+'px');
-			}
-		});
-		dung_vertical_divide.makeResizable({
-			'handle': dung_vertical_divide,
-			'modifiers':{'x':'left', 'y':false},
-			'onDrag':function() { stickConsole(); }
-		});
-		*/
 		if(this.jq.browser.opera) {
 			// Opera doesn't implement onerror but has it's own API http://dragonfly.opera.com/app/scope-interface/scope-dom-interface.html
 			var connected = function(services) {
@@ -126,7 +107,7 @@ var dung_beetle = {
 					}
 					alert("Connected to STP/0 host");
 				}
-			}
+			};
 			var receive = function(service, message, command, status, tag) {
 				if (status != 0) {
 					alert("Error in command " + command);
@@ -137,7 +118,7 @@ var dung_beetle = {
 				} else {
 					// Handle event
 				}
-			}
+			};
 			var quit = function() {};
 			console.log(opera);
 			//opera.scopeAddClient(connected, receive, quit, 0);
@@ -207,13 +188,13 @@ var dung_beetle = {
 		if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
 			this.editValue(clicked);
 		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.parent().children()[0] != this.current_dom_node) {
-			var clicked = this.jq(clicked.parent().children()[0]);
-			clicked.addClass('dung_dom_selected');
-			this.inspectElement(clicked[0].hover_highlight);
+			var clckd = this.jq(clckd.parent().children()[0]);
+			clckd.addClass('dung_dom_selected');
+			this.inspectElement(clckd[0].hover_highlight);
 			if(this.current_dom_node) {
 				this.current_dom_node.removeClass('dung_dom_selected');
 			}
-			this.current_dom_node = clicked;
+			this.current_dom_node = clckd;
 		} else if(clicked.hasClass('cancel')) {
 			this.toggleCSSStyle(clicked.parent());
 		} else if(clicked.attr('src') && clicked.attr('src').indexOf('cancel') > -1) {
@@ -318,7 +299,7 @@ var dung_beetle = {
 	},
 	// Display everything inside the body tag and highlight it
 	displayDOM: function(papa, element) {
-		if(!papa) {papa = this.elements.display[0]; this.elements.display.empty()}
+		if(!papa) {papa = this.elements.display[0]; this.elements.display.empty();}
 		element = element || this.jq('body')[0];
 		if(element.className) {
 			if(element.className.match('dung')) {
@@ -353,7 +334,7 @@ var dung_beetle = {
 
 			var nodes = element.childNodes;
 			if(nodes.length) {
-				for(var x=0; x<nodes.length; x++) {
+				for(x=0; x<nodes.length; x++) {
 					var node = this.jq('<div></div>').attr('class', 'dung_node').appendTo(papa)[0];
 					this.displayDOM(node, nodes[x]);
 				}
@@ -410,12 +391,12 @@ var dung_beetle = {
 							}
 						}
 					}
-					css_styles[css_styles.length-1]['html'] += '<span>}</span></div><br />';
+					css_styles[css_styles.length-1].html += '<span>}</span></div><br />';
 				}
 			}
 			css_styles.sort(this.weightedSort);
-			for(var x=0; x<css_styles.length; x++) {
-				this.elements.styler.html(this.elements.styler.html() + css_styles[x]['html']);
+			for(var y=0; y<css_styles.length; y++) {
+				this.elements.styler.html(this.elements.styler.html() + css_styles[y].html);
 			}
 		}
 	},
@@ -537,7 +518,9 @@ var dung_beetle = {
 		};
 		this.findByElement = function(element, papa) {
 			var found = false;
-			if(!papa) papa = stroller;
+			if(!papa) {
+                papa = stroller;
+            }
 
 			if(papa.hover_highlight == element) {
 				return this.jq(papa);
@@ -582,7 +565,7 @@ var dung_beetle = {
 			}
 			this.tag_open.html(this.tag_open.html() + styles+'&gt;');
 			this.toggle_btn.click(tree.dung.bind(this.toggle, this));
-		}
+		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
 				this.setExpanded();
@@ -604,7 +587,9 @@ var dung_beetle = {
 		};
 		this.node.prototype.expand = function(depth) {
 			var expand = tree.dung.type(depth) == 'number' && depth > 0 ? true : false;
-			if(this.expanded) return this;
+			if(this.expanded) {
+                return this;
+            }
 			this.setExpanded();
 			this.expanded = true;
 			var kids = this.jq(this.dom_node).contents();
@@ -625,7 +610,9 @@ var dung_beetle = {
 			return this;
 		};
 		this.node.prototype.collapse = function() {
-			if(!this.expanded) return this;
+			if(!this.expanded) {
+                return this;
+            }
 			this.expanded = false;
 			this.stroller.remove();
 			this.closeTag.remove();
@@ -663,17 +650,17 @@ var dung_beetle = {
 			left: parseInt(elem.css('padding-left')),
 			bottom: parseInt(elem.css('padding-bottom')),
 			right: parseInt(elem.css('padding-right'))
-		}
+		};
 		var size = {
 			x:elem.width() - padding.left - padding.right,
 			y:elem.height() - padding.top - padding.bottom
-		}
+		};
 		var margin = {
 			top: parseInt(elem.css('margin-top').toInt()),
 			left: parseInt(elem.css('margin-left').toInt()),
 			bottom: parseInt(elem.css('margin-bottom').toInt()),
 			right: parseInt(elem.css('margin-right').toInt())
-		}
+		};
 
 		this.elements.overlay.setStyles({'display':'block', 'left':(pos.left+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
 		this.elements.padding.top.setStyles({'display':'block', 'left':pos.left+'px', 'top':pos.top+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
@@ -758,6 +745,7 @@ var dung_beetle = {
 		}
 
 		if(this.current_element && evt.target != this.current_element[0]) {
+			this.jq(evt).stopPropagation();
 			if(!evt.target.className || !/dung/.test(evt.target.className)) {
 				this.inspectElement(evt);
 				this.highlightInDOMView(this.jq(evt.target));
@@ -766,6 +754,7 @@ var dung_beetle = {
 			}
 		}
 		this.stopDOMInspection();
+		return false;
 	},
 	stopDOMInspection: function() {
 		//Stop DOM inspection
@@ -784,30 +773,31 @@ var dung_beetle = {
 		var failed = [];
 		this.styleSheets = [];
 		for(var x=0; x <document.styleSheets.length; x++) {
-			var styleSheet = document.styleSheets[x];
 			try {
+				var styleSheet = document.styleSheets[x];
 				styleSheet.rules || styleSheet.cssRules;
 				this.styleSheets.push(styleSheet);
 			} catch(e) {
-				console.log(e);
-				if(styleSheet.href.indexOf('dung-beetle.css') < 0) {
+				if(styleSheet.href.indexOf('dung-styles.css') < 0) {
 					failed.push(styleSheet.href);
 				}
 			}
 		}
-		if(failed) {
-			console.warn('Warning, the following style sheets will not be parsed by Dung Beetle as they are are not on this domain or a subdomain:',failed);
+		if(failed.length) {
+			console.warn('Warning, the following style sheets will not be parsed by Dung Beetle as they are are not on this domain or a subdomain:');
+			console.warn(failed);
 		} 
 		this.CSS = this.parseCSS();
 	},
 	parseCSS: function() {
-		var css={};
+		var styleSheet, loc, css={};
 		for(var x=0; x <this.styleSheets.length; x++) {
-			var styleSheet = this.styleSheets[x];
-			css[styleSheet.href] = {};
+			styleSheet = this.styleSheets[x];
+			loc = styleSheet.href || x;
+			css[loc] = {};
 			var rules = styleSheet.rules || styleSheet.cssRules;
 			for(var i=0; i<rules.length; i++) {;
-				css[styleSheet.href][rules[i]['selectorText']] = rules[i]['style']['cssText'];
+				css[loc][rules[i]['selectorText']] = rules[i]['style']['cssText'];
 			}
 		}
 		return css;
@@ -1082,14 +1072,14 @@ var dung_beetle = {
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 			console.log('Dung Beetle:', dung_beetle);
 		},
-		xlog: function() {
+		log: function() {
 			this.addToConsole(arguments);
 		},
-		exrror: function() {
+		error: function() {
 			//this.addToConsole(this.printStackTrace(), 'dung_error');
 			console.warn(this.printStackTrace());
 		},
-		waxrn: function() {
+		warn: function() {
 			this.addToConsole(arguments, 'dung_warn');
 		},
 		addToConsole: function(args, wrapclass) {
@@ -1298,7 +1288,7 @@ var dung_beetle = {
 		}
 	},
 	injectClassedDivsTo: function(classes, par) {
-		var built = {}
+		var built = {};
 		for(var x=0, l=classes.length; x<l; x++) {
 			built[classes[x]] = this.jq('<div></div>').attr('class', 'dung_'+classes[x]).appendTo(par);
 		}
@@ -1389,7 +1379,7 @@ var dung_beetle = {
 			clearTimeout(this.uncalled); 
 		}
 		this.uncalled = setTimeout(this.bind(func, this), timeout);
-	},
+	}
 };
 
 function compileStyles(style_group) {
