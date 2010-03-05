@@ -431,7 +431,8 @@ window.dung_beetle = {
 	// Determines if a CSS selector affects an element by analyzing the element's full DOM parentage.
 	// For example, '.class div#id span h3' will match the selector of 'div#id h3'
 	matchFullSelector: function(test, selector) {
-		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]*') + '( |$)';
+		// Craziness to escape tags with *
+		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]d~~d').replace(/\*/g, '\\*').replace(/d~~d/g, '*') + '( |$)';
 		return new RegExp(regex, 'i').test(selector);
 	}, 
 	// Determine CSS inheritance by "weight" of selectors (heaviest is most specific). Example: "#bob .hi" outweights ".hi"
