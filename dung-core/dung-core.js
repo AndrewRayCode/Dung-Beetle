@@ -1,3 +1,4 @@
+<?php header('Access-Control: allow <*>'); ?>
 /*
 * Javascript based DOM/CSS inspector by Andrew Ray
 * AndrewRay.me
@@ -10,17 +11,15 @@
 var dung_beetle = {
 	start: function() {
 		this.jq = jQuery.noConflict('EXTREMEZ!1!one');
-		if(this.jq('#dung_style_sheet').length) {
-			this.setup();
-		} else {
-			this.jq('<link rel="stylesheet" type="text/css" href="../dung-core/dung-styles.css" />').appendTo('head').ready(this.bind(this.setup, this));
-		}
+		this.jq('<link rel="stylesheet" id="dung_style_sheet" type="text/css" href="'+this.settings.css+'" />').appendTo('head');
+		document.domain = document.domain.replace(/$www\.?/, '');
+		this.setup();
 	},
 	setup: function() {
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
 		var me = this;
-		window.onerror = this.bind(this.trapError, this);
-		this.jq(window).bind('error', this.bind(this.trapError, this));
+		//window.onerror = this.bind(this.trapError, this);
+		//this.jq(window).bind('error', this.bind(this.trapError, this));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
@@ -782,21 +781,29 @@ var dung_beetle = {
 		this.showOutlines();
 	},
 	checkCSSLoaded: function() {
+		var failed = [];
+		this.styleSheets = [];
 		for(var x=0; x <document.styleSheets.length; x++) {
 			var styleSheet = document.styleSheets[x];
 			try {
 				styleSheet.rules || styleSheet.cssRules;
+				this.styleSheets.push(styleSheet);
 			} catch(e) {
-				setTimeout(this.bind(this.checkCSSLoaded, this), 100);
-				return;
+				console.log(e);
+				if(styleSheet.href.indexOf('dung-beetle.css') < 0) {
+					failed.push(styleSheet.href);
+				}
 			}
 		}
+		if(failed) {
+			console.warn('Warning, the following style sheets will not be parsed by Dung Beetle as they are are not on this domain or a subdomain:',failed);
+		} 
 		this.CSS = this.parseCSS();
 	},
 	parseCSS: function() {
 		var css={};
-		for(var x=0; x <document.styleSheets.length; x++) {
-			var styleSheet = document.styleSheets[x];
+		for(var x=0; x <this.styleSheets.length; x++) {
+			var styleSheet = this.styleSheets[x];
 			css[styleSheet.href] = {};
 			var rules = styleSheet.rules || styleSheet.cssRules;
 			for(var i=0; i<rules.length; i++) {;
@@ -1075,14 +1082,14 @@ var dung_beetle = {
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 			console.log('Dung Beetle:', dung_beetle);
 		},
-		log: function() {
+		xlog: function() {
 			this.addToConsole(arguments);
 		},
-		error: function() {
+		exrror: function() {
 			//this.addToConsole(this.printStackTrace(), 'dung_error');
 			console.warn(this.printStackTrace());
 		},
-		warn: function() {
+		waxrn: function() {
 			this.addToConsole(arguments, 'dung_warn');
 		},
 		addToConsole: function(args, wrapclass) {
@@ -1213,6 +1220,7 @@ var dung_beetle = {
 		color_hover: false
 	},
 	settings: {
+		css: 'http://andrewray.me/dung-beetle/secret/dung-styles.css',
 		default_height: 180,
 		trap_errors: false,
 		tab_width: 105,
@@ -1422,7 +1430,7 @@ function splatStyles(style_group) {
 }
 
 function addCSSRule(selector, attributes){
-	var ss = document.styleSheets;
+	var ss = this.styleSheets;
 	
 	// Edit an existing rule if we find it
 	for(var x=0; x <ss.length; x++) {

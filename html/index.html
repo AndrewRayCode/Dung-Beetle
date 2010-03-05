@@ -45,14 +45,41 @@
 		</div>
 	</div>
 	<script type="text/javascript">
-		var dung_beetle = document.createElement('script');
-		dung_beetle.setAttribute('src','../dung-core/dung-core.js');
-		dung_beetle.setAttribute('id','dung_script');
-		document.body.appendChild(dung_beetle);
-		(function() {
-			 if(window.dung_beetle.start){dung_beetle.start();}else{setTimeout(arguments.callee);}
-		})();
-		void(dung_beetle);
+		var dung_xhr;
+		if(window.XMLHttpRequest) {
+			dung_xhr = new XMLHttpRequest();
+			if(dung_xhr.overrideMimeType) {
+				dung_xhr.overrideMimeType('text/xml');
+			}
+		} else if(window.ActiveXObject) {
+			try {
+				dung_xhr = new ActiveXObject('Msxml2.XMLHTTP');
+			} catch(e) {
+				try {
+					dung_xhr = new ActiveXObject('Microsoft.XMLHTTP');
+				} catch(e) { }
+			}
+		};
+		if(dung_xhr) {
+			dung_xhr.onreadystatechange = function() {  
+				if (dung_xhr.readyState == 4) {  
+					if(dung_xhr.status == 200) {
+						var dung_script_tag = document.createElement('script');
+						dung_script_tag.setAttribute('id','dung_script');
+						document.body.appendChild(dung_script_tag);
+						dung_script_tag.innerHTML = dung_xhr.responseText;  
+						dung_beetle.start();
+					} else {
+						alert('Failed '+dung_xhr.status);
+					}
+				}  
+			}  
+			dung_xhr.open('GET', 'http://andrewray.me/dung-beetle/secret/dung-core.php', true);  
+			dung_xhr.send();
+		} else{
+			alert('This browser does not support XHR requests');
+		}
+		//void(dung_beetle);
 	</script>
 </body>
 </html>
