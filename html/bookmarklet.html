@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>Dung Beetle Bookmarklet Secret Page! SECRET!</title>
-		<link rel="stylesheet" type="text/css" href="dung-beetle.css" />
+		<link rel="stylesheet" type="text/css" href="../dung-beetle.css" />
 	</head>
 <body>
 	<div class="wrapper">
@@ -9,8 +9,12 @@
 			<h1>Dung Beetle</h1><h2>A JavaScript based DOM+CSSeditor and inspector for ANY browser</h2>
 		</div>
 		<div class="content" style="border:0 none; ">
+			<div class="tr"></div>
+			<div class="tl"></div>
+			<div class="bl"></div>
+			<div class="br"></div>
 			<h1>Dung Beetle SECRET tractor</h1>
-			<a href="javascript:window.dungCatch=function(s){eval(s)};var dung_script = document.createElement('script'); dung_script.setAttribute('src','http://andrewray.me/dung-beetle/secret/dung-compressed.js'); dung_script.setAttribute('id','dung_script'); document.body.appendChild(dung_script);">Dung Beetle</a>
+			<a href="javascript:var dungCatch=function(s){eval(s)};var dung_=document.createElement('script');document.body.appendChild(dung_);dung_.setAttribute('src','http://andrewray.me/dung-beetle/secret/dung-compressed.js');dung_.setAttribute('id','dung_script');(function(){if(window.dung_beetle){dung_beetle.start();}else{setTimeout(arguments.callee);}})()">Dung Beetle</a>
 		</div>
 </body>
 </html>
