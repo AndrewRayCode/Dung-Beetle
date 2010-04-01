@@ -198,9 +198,9 @@ window.dung_beetle = {
 			}
 			this.current_dom_node = clckd;
 		} else if(clicked.hasClass('cancel')) {
-			this.toggleCSSStyle(clicked.parent());
+			this.toggleCSSStyle(this.jq(clicked.parent()));
 		} else if(clicked.attr('src') && clicked.attr('src').indexOf('cancel') > -1) {
-			this.toggleCSSRule(clicked.parent().parent().parent());
+			this.toggleCSSRule(this.jq(clicked.parent().parent().parent()));
 		}
 
 		// Execute multi-line script in console
@@ -865,6 +865,117 @@ window.dung_beetle = {
 			return true;
 		}
 	},
+	compileStyles: function(style_group) {
+		var styles = splatStyles(style_group);
+		var first = this.jq(this.jq(style_group.children()[0]).children()[0]);
+		var selector = first.innerHTML;
+		if(selector == 'element.style') {
+			this.current_element.set('style', styles);
+			var style = this.getCurrentStyleTag().next()[0];
+			style.innerHTML = styles;
+		} else {
+			this.addCSSRule(first.innerHTML, styles);
+		}
+	},
+	getCurrentStyleTag: function() {
+		for(var x=0, children=this.current_dom_node.children(); x<children.length; x++) {
+			if(children[x].children()[0].innerHTML.toString() == 'style') {
+				return this.jq(children[x].children()[0]);
+			}
+		}
+	},
+	// Take a style group and convert it to a string of all the styles, like "border:1px dotted green; color:red"
+	splatStyles: function(style_group) {
+		var style_pairs = style_group.children();
+		var str = '';
+
+		// Splicing fails in IE so just start at 2 and end at -1 for the span tags
+		for(var x=1; x<style_pairs.length-1; x++) {
+			if(this.jq(style_pairs[x]).hasClass('canceled')) {
+				continue;
+			}
+
+			// We have an active input
+			var css = this.jq(this.jq(style_pairs[x].children()[0]).next());
+			var first = this.jq(css.children()[0]);
+			var selector = (first && first.get('tag') == 'input') ? first[0].value : css[0].innerHTML;
+
+			css = this.jq(css.next());
+			first = this.jq(css.next());
+			var rule = (first && first.get('tag') == 'input') ? first[0].value : css[0].innerHTML;
+
+			str += selector+': '+rule+'; ';
+		}
+		return this.dungStripTags(this.trim(str));
+	},
+	addCSSRule: function(selector, attributes) {
+		var ss = this.styleSheets;
+		
+		// Edit an existing rule if we find it
+		for(var x=0; x<ss.length; x++) {
+			var styleSheet = ss[x];
+			var rules = styleSheet.rules || styleSheet.cssRules;
+			for(var i=0; i<rules.length; i++) {
+				if(rules[i]['selectorText'] == selector) {
+					if(styleSheet.rules) {
+						this.styleSheets[x].rules[i]['style']['cssText'] = attributes;
+					} else {
+						this.styleSheets[x].cssRules[i]['style']['cssText'] = attributes;
+					}
+					return;
+				}
+			}
+		}
+		// Else add a new one
+		if(document.styleSheets[0].insertRule) {
+			// Non-IE
+			document.styleSheets[0].insertRule(selector + '{'+attributes+'}', document.styleSheets[0].cssRules.length);
+			// IE
+		} else if(document.styleSheets[0].addRule) {
+			document.styleSheets[0].addRule(selector, attributes, document.styleSheets[0].rules.length);
+		} else {
+			console.error('This browser does not support CSS editing');
+		}
+	},
+	toggleCSSStyle: function(style_pair) {
+		style_pair.toggleClass('canceled');
+		this.compileStyles(this.jq(style_pair.parent()));
+	},
+	// Toggle an entire selector, like turn off all styles under ".class"
+	toggleCSSRule: function(css_group) {
+		var selector_span = this.jq(this.jq(css_group.children()[0]).children()[0]);
+		var selector = selector_span[0].innerHTML;
+		css_group.toggleClass('canceled');
+		this.jq(selector_span.next()).first().src = css_group.hasClass('canceled') ? 'dung_cancel.gif' : 'dung_cancel_gray.gif';
+		
+		if(selector == 'element.style') {
+			var style = this.jq(this.getCurrentStyleTag().next());
+			return;
+		}
+
+		var ss = this.styleSheets;
+		for(var x=0; x <ss.length; x++) {
+			var styleSheet = ss[x];
+			var rules = styleSheet.rules || styleSheet.cssRules;
+			for(var i=0; i<rules.length; i++) {
+				var canceled = rules[i].selectorText.indexOf('#DungCancel ') > -1;
+				var replaced = rules[i].selectorText.replace('#DungCancel ', '');
+				if(selector.toLowerCase() == replaced.toLowerCase()) {
+					var rule;
+					if(styleSheet.rules) {
+						rule = styleSheet.rules[i].style.cssText;
+						styleSheet.removeRule(i);
+					} else {
+						rule = styleSheet.cssRules[i].style.cssText;
+						styleSheet.deleteRule(i);
+					}
+					this.addCSSRule( (canceled ? replaced : '#DungCancel '+selector), rule);
+					return;
+				}
+			}
+		}
+		console.error('Warning: Rule to toggle not found');
+	},
 	// The console object, gives us .log, .warn, .error
 	console: {
 		init: function(where, dung_beetle) {
@@ -1387,118 +1498,6 @@ window.dung_beetle = {
 	}
 };
 
-function compileStyles(style_group) {
-	var styles = splatStyles(style_group);
-	var selector = style_group.getFirst().getFirst().innerHTML;
-	if(selector == 'element.style') {
-		current_element.set('style', styles);
-		var style = getCurrentStyleTag().getNext();
-		style.innerHTML = styles;
-	} else {
-		addCSSRule(style_group.getFirst().getFirst().innerHTML, styles);
-	}
-}
-
-// Take a style group and convert it to a string of all the styles, like "border:1px dotted green; color:red"
-function splatStyles(style_group) {
-	var style_pairs = style_group.getChildren();
-	var str = '';
-
-	// Splicing fails in IE so just start at 2 and end at -1 for the span tags
-	for(var x=1; x<style_pairs.length-1; x++) {
-		if(style_pairs[x].hasClass('canceled')) {
-			continue;
-		}
-
-		// We have an active input
-		var css = style_pairs[x].getFirst().getNext();
-		var first = css.getFirst();
-		var selector = (first && first.get('tag') == 'input') ? first.value : css.innerHTML;
-
-		css = css.getNext();
-		first = css.getFirst();
-		var rule = (first && first.get('tag') == 'input') ? first.value : css.innerHTML;
-
-		str += selector+': '+rule+'; ';
-	}
-	return dungStripTags(str.trim());
-}
-
-function addCSSRule(selector, attributes){
-	var ss = this.styleSheets;
-	
-	// Edit an existing rule if we find it
-	for(var x=0; x <ss.length; x++) {
-		var styleSheet = ss[x];
-		var rules = $pick(styleSheet.rules, styleSheet.cssRules);
-		for(var i=0; i<rules.length; i++) {
-			if(rules[i]['selectorText'] == selector) {
-				if(styleSheet.rules) {
-					document.styleSheets[x].rules[i]['style']['cssText'] = attributes;
-				} else {
-					document.styleSheets[x].cssRules[i]['style']['cssText'] = attributes;
-				}
-				return;
-			}
-		}
-	}
-
-	// Else add a new one
-	if(document.styleSheets[0].insertRule) {
-		// Non-IE
-		document.styleSheets[0].insertRule(selector + '{'+attributes+'}', document.styleSheets[0].cssRules.length);
-		// IE
-	} else if(document.styleSheets[0].addRule) {
-		document.styleSheets[0].addRule(selector, attributes, document.styleSheets[0].rules.length);
-	} else {
-		console.error('This browser does not support CSS editing');
-	}
-}
-
-// 
-function toggleCSSStyle(style_pair) {
-	style_pair.toggleClass('canceled');
-	compileStyles(style_pair.getParent());
-}
-
-// Toggle an entire selector, like turn off all styles under ".class"
-function toggleCSSRule(css_group) {
-	var selector_span = css_group.getFirst().getFirst();
-	var selector = selector_span.innerHTML;
-	css_group.toggleClass('canceled');
-	selector_span.getNext().getFirst().src = css_group.hasClass('canceled') ? 'dung_cancel.gif' : 'dung_cancel_gray.gif';
-	
-	if(selector == 'element.style') {
-		var style = getCurrentStyleTag().getNext();
-		
-		return;
-	}
-
-	var ss = document.styleSheets;
-	for(var x=0; x <ss.length; x++) {
-		var styleSheet = ss[x];
-		var rules = $pick(styleSheet.rules, styleSheet.cssRules);
-		for(var i=0; i<rules.length; i++) {
-			var canceled = rules[i]['selectorText'].indexOf('#DungCancel ') > -1;
-			var replaced = rules[i]['selectorText'].replace('#DungCancel ', '');
-			if(selector.toLowerCase() == replaced.toLowerCase()) {
-				var rule;
-				if(styleSheet.rules) {
-					rule = styleSheet.rules[i]['style']['cssText'];
-					styleSheet.removeRule(i);
-				} else {
-					rule = styleSheet.cssRules[i]['style']['cssText'];
-					styleSheet.deleteRule(i);
-				}
-				addCSSRule( (canceled ? replaced : '#DungCancel '+selector), rule);
-				return;
-			}
-		}
-	}
-	console.error('Warning: Rule to toggle not found');
-}
-
-
 function inspectHover(event) {
 	var e = new Event(event).stop();
 	var elem = e.target;
@@ -1783,14 +1782,6 @@ function autoComplete(input, match_obj) {
 				range.select();
 			}
 			break;
-		}
-	}
-}
-
-function getCurrentStyleTag() {
-	for(var x=0, children = current_dom_node.getChildren(); x<children.length; x++) {
-		if(children[x].getFirst().innerHTML.toString() == 'style') {
-			return children[x].getFirst();
 		}
 	}
 }
