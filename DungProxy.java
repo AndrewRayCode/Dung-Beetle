@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.regex.*;
 
 public class DungProxy {
 	public static void main(String[] args) throws IOException {
@@ -17,6 +18,31 @@ public class DungProxy {
 		}
 	}
 
+	public static String errReturn(String err, String url) {
+		return "dung_beetle.proxyError('"+err+"', '"+url+"')";
+	}
+
+	public static String cssReturn(String css, String url) {
+		return "dung_beetle.parseCss('"+escapeStr(css)+"', '"+url+"')";
+	}
+
+	public static String jsReturn(String js, String url) {
+		return "dung_beetle.parseJs('"+escapeStr(js)+"', '"+url+"')";
+	}
+	
+	/**
+	 * Escape a string to be put into a single quoted javascript function
+	 */
+	public static String escapeStr(String s) {
+		Pattern p = Pattern.compile("[\r|\n]+");
+		String[] spt = p.split(s.replace("\\", "\\\\").replace("'", "\\'"));
+		StringBuilder sb = new StringBuilder();
+		for(int x=0; x<spt.length; x++) {
+			sb.append(spt[x]);
+		}
+		return sb.toString();
+	}
+
 	/**
 	 * runs a single-threaded proxy server on
 	 * the specified local port. It never returns.
@@ -29,7 +55,7 @@ public class DungProxy {
 		byte[] reply = new byte[4096];
 
 		while (true) {
-			Socket client = null, server = null;
+			Socket client = null;
 			try {
 				// Wait for a connection on the local port
 				client = ss.accept();
@@ -37,34 +63,43 @@ public class DungProxy {
 				final InputStream streamFromClient = client.getInputStream();
 				final OutputStream streamToClient = client.getOutputStream();
 
-
-				PrintWriter mout = new PrintWriter(streamToClient);
-				StringBuilder sb = new StringBuilder(); 
-				String line; 
-				try { 
-					BufferedReader reader = new BufferedReader(new InputStreamReader(streamFromClient , "UTF-8")); 
-					while ((line = reader.readLine()) != null) { 
-						sb.append(line).append("\n"); 
-						mout.write(sb.toString());
-						mout.flush();
-					} 
+				PrintWriter out = new PrintWriter(streamToClient);
+				StringBuilder sb = new StringBuilder();
+				String line = null, url = "", userAgent = "";
+				try {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(streamFromClient , "UTF-8"));
+					while ((line = reader.readLine()) != null && (url.length() == 0 && userAgent.length() == 0)) {
+						if(line.indexOf("GET") > -1 && url.length() == 0) {
+							String[] spl = line.split(" ");
+							url = removeFirst(spl[1], '/');
+						}
+						if(line.indexOf("User-Agent") > -1 && userAgent.length() == 0) {
+							userAgent = line.replace("User-Agent ", "");
+						}
+					}
 				} finally {
-					mout.write("HAHAHAHHAHAHAHA");
-					mout.flush();
-					streamFromClient.close(); 
-				} 
-				
-				mout.write(sb.toString());
-				mout.flush();
+				}
+
+				URL req = new URL(url);
+				URLConnection urlConn = req.openConnection();
+				urlConn.setRequestProperty("User-Agent", userAgent);
+				BufferedReader in = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
+				StringBuilder osb = new StringBuilder();
+				while((line = in.readLine()) != null) {
+					osb.append(line);
+				}
+				streamToClient.write(cssReturn(osb.toString(), host).getBytes());
+				in.close();
+				streamToClient.close();
+
+				/*
 				// Make a connection to the real server.
 				// If we cannot connect to the server, send an error to the
 				// client, disconnect, and continue waiting for connections.
 				try {
-					server = new Socket(host, remoteport);
+					server = new Socket(url, remoteport);
 				} catch (IOException e) {
-					PrintWriter out = new PrintWriter(streamToClient);
-					out.print("Proxy server cannot connect to " + host + ":"
-							+ remoteport + ":\n" + e + "\n");
+					out.print(errReturn("Proxy server cannot connect: " + e, host));
 					out.flush();
 					client.close();
 					continue;
@@ -102,24 +137,24 @@ public class DungProxy {
 				// Read the server's responses
 				// and pass them back to the client.
 				int bytesRead;
+				StringBuilder osb = new StringBuilder();
 				try {
 					while ((bytesRead = streamFromServer.read(reply)) != -1) {
-						streamToClient.write(reply, 0, bytesRead);
-						streamToClient.flush();
+						osb.append(new String(reply, 0, bytesRead));
 					}
 				} catch (IOException e) {
 				}
+				streamToClient.write(cssReturn(osb.toString(), host).getBytes());
+				streamToClient.write("HI HI HI HI HI".getBytes());
 
 				// The server closed its connection to us, so we close our
 				// connection to our client.
 				streamToClient.close();
+			*/
 			} catch (IOException e) {
 				System.err.println(e);
 			} finally {
 				try {
-					if (server != null) {
-						server.close();
-					}
 					if (client != null) {
 						client.close();
 					}
@@ -127,5 +162,16 @@ public class DungProxy {
 				}
 			}
 		}
+	}
+	public static String removeFirst(String s, char c) {
+		String r = "";
+		boolean found = false;
+		for (int i = 0; i < s.length(); i ++) {
+			if (s.charAt(i) != c || found) {
+				r += s.charAt(i);
+				found = true;
+			}
+		}
+		return r;
 	}
 }
