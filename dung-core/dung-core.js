@@ -772,25 +772,30 @@ window.dung_beetle = {
 		this.dungstatus.indung_lock = false;
 		this.showOutlines();
 	},
+	proxyUrl: function(url) {
+		return this.settings.proxy_url + url;
+	},
+	noProxy: function(evt) {
+		console.warn('The following CSS file will not be loaded unless you are running the DungProxy.');
+	},
 	checkCSSLoaded: function() {
 		var failed = [];
 		this.styleSheets = [];
-		for(var x=0; x <document.styleSheets.length; x++) {
+		for(var x=0, l=document.styleSheets.length; x<l; x++) {
 			try {
 				var styleSheet = document.styleSheets[x];
 				styleSheet.rules || styleSheet.cssRules;
 				this.styleSheets.push(styleSheet);
 			} catch(e) {
 				if(styleSheet.href.indexOf('dung-styles.css') < 0) {
+					this.jq('<script src="'+this.proxyUrl(styleSheet.href)+'" />').appendTo(document.body).error(this.bind(this.noProxy, this));
 					failed.push(styleSheet.href);
 				}
 			}
 		}
-		if(failed.length) {
-			console.warn('Warning, the following style sheets will not be parsed by Dung Beetle as they are are not on this domain or a subdomain:');
-			console.warn(failed);
-		} 
-		this.CSS = this.parseCSS();
+		if(!failed.length) {
+			this.CSS = this.parseCSS();
+		}
 	},
 	parseCSS: function() {
 		var styleSheet, loc, css={};
@@ -975,6 +980,14 @@ window.dung_beetle = {
 			}
 		}
 		console.error('Warning: Rule to toggle not found');
+	},
+	catchCss: function(css, url) {
+		this.jq('link[href='+url+']').remove();
+		this.jq('<style type="text/css"></style>').html(css).appendTo(document.body);
+		this.parseCSS();
+	},
+	catchJs: function(js, url) {
+		console.log('WOOHOO ',js);
 	},
 	// The console object, gives us .log, .warn, .error
 	console: {
@@ -1326,13 +1339,15 @@ window.dung_beetle = {
 		color_hover: false
 	},
 	settings: {
-		css: 'http://andrewray.me/dung-beetle/secret/dung-styles.css',
+		//css: 'http://andrewray.me/dung-beetle/secret/dung-styles.css',
+		css: 'http://localhost:8080/dung-beetle/dung-core/dung-styles.css',
 		default_height: 180,
 		trap_errors: false,
 		tab_width: 105,
 		tab_offset: 140,
 		inspect_delay: 300,
-		my_site: 'http://andrewray.me/dung-beetle/index.html'
+		my_site: 'http://andrewray.me/dung-beetle/index.html',
+		proxy_url: 'http://localhost:8585/'
 	},
 	input: {
 		mouse: {x:1, y:1}

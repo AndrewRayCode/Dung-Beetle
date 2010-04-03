@@ -7,7 +7,15 @@ public class DungProxy {
 		try {
 			String host = "Dung Proxy Server";
 			int remoteport = 80;
-			int localport = 8080;
+			int localport = 8585;
+			if (args.length > 0) {
+				try {
+					localport = Integer.parseInt(args[0]);
+				} catch (NumberFormatException e) {
+					System.err.println("Port must be an integer");
+					System.exit(1);
+				}
+			}
 			// Print a start-up message
 			System.out.println("Starting proxy for " + host + ":" + remoteport
 					+ " on port " + localport);
@@ -23,11 +31,11 @@ public class DungProxy {
 	}
 
 	public static String cssReturn(String css, String url) {
-		return "dung_beetle.parseCss('"+escapeStr(css)+"', '"+url+"')";
+		return "dung_beetle.catchCss('"+escapeStr(css)+"', '"+url+"')";
 	}
 
 	public static String jsReturn(String js, String url) {
-		return "dung_beetle.parseJs('"+escapeStr(js)+"', '"+url+"')";
+		return "dung_beetle.catchJs('"+escapeStr(js)+"', '"+url+"')";
 	}
 	
 	/**
@@ -80,6 +88,7 @@ public class DungProxy {
 				} finally {
 				}
 
+				System.out.println(url);
 				URL req = new URL(url);
 				URLConnection urlConn = req.openConnection();
 				urlConn.setRequestProperty("User-Agent", userAgent);
@@ -88,69 +97,9 @@ public class DungProxy {
 				while((line = in.readLine()) != null) {
 					osb.append(line);
 				}
-				streamToClient.write(cssReturn(osb.toString(), host).getBytes());
+				streamToClient.write(cssReturn(osb.toString(), url).getBytes());
 				in.close();
 				streamToClient.close();
-
-				/*
-				// Make a connection to the real server.
-				// If we cannot connect to the server, send an error to the
-				// client, disconnect, and continue waiting for connections.
-				try {
-					server = new Socket(url, remoteport);
-				} catch (IOException e) {
-					out.print(errReturn("Proxy server cannot connect: " + e, host));
-					out.flush();
-					client.close();
-					continue;
-				}
-
-				// Get server streams.
-				final InputStream streamFromServer = server.getInputStream();
-				final OutputStream streamToServer = server.getOutputStream();
-
-				// a thread to read the client's requests and pass them
-				// to the server. A separate thread for asynchronous.
-				Thread t = new Thread() {
-					public void run() {
-						int bytesRead;
-						try {
-							while ((bytesRead = streamFromClient.read(request)) != -1) {
-								streamToServer.write(request, 0, bytesRead);
-								streamToServer.flush();
-							}
-						} catch (IOException e) {
-						}
-
-						// the client closed the connection to us, so close our
-						// connection to the server.
-						try {
-							streamToServer.close();
-						} catch (IOException e) {
-						}
-					}
-				};
-
-				// Start the client-to-server request thread running
-				t.start();
-
-				// Read the server's responses
-				// and pass them back to the client.
-				int bytesRead;
-				StringBuilder osb = new StringBuilder();
-				try {
-					while ((bytesRead = streamFromServer.read(reply)) != -1) {
-						osb.append(new String(reply, 0, bytesRead));
-					}
-				} catch (IOException e) {
-				}
-				streamToClient.write(cssReturn(osb.toString(), host).getBytes());
-				streamToClient.write("HI HI HI HI HI".getBytes());
-
-				// The server closed its connection to us, so we close our
-				// connection to our client.
-				streamToClient.close();
-			*/
 			} catch (IOException e) {
 				System.err.println(e);
 			} finally {
