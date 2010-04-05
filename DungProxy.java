@@ -45,7 +45,7 @@ public class DungProxy {
 		String[] spt = p.split(s.replace("\\", "\\\\").replace("'", "\\'"));
 		StringBuilder sb = new StringBuilder();
 		for(int x=0; x<spt.length; x++) {
-			sb.append(spt[x]);
+			sb.append(spt[x] + "~$~");
 		}
 		return sb.toString();
 	}

@@ -81,8 +81,8 @@ window.dung_beetle = {
 		this.elements.upsize.bind('click', this.bind(this.toggleUpsize, this));
 
 		this.elements.dung_beetle.bind('click', this.bind(this.dungClick, this))
-			.bind('mouseover', this.bind(this.hoverEvent, this))
-			.bind('dblclick', this.bind(this.dblClickEvent, this));
+			.bind('mouseover', this.bind(this.hoverHandler, this))
+			.bind('dblclick', this.bind(this.dblClickHandler, this));
 
 		this.jq(window).bind('scroll', this.bind(this.stick, this)).bind('resize', this.bind(this.stick, this));
 		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this)).click(this.bind(this.bodyClickEvent, this));
@@ -95,37 +95,7 @@ window.dung_beetle = {
 
 		//TODO: Why don't browsers stick properly the first time?
 		setTimeout(this.bind(this.stick, this), 10);
-
-		if(this.jq.browser.opera) {
-			// Opera doesn't implement onerror but has it's own API http://dragonfly.opera.com/app/scope-interface/scope-dom-interface.html
-			var connected = function(services) {
-				for (var service in services) {
-					if (service.substring(0, 5) == "stp-0") {
-						alert("Connected to STP/1 host but using STP/0 fallback");
-						return;
-					} else if (service == "stp-1") {
-						alert("Connected to STP/1 host");
-						return;
-					}
-					alert("Connected to STP/0 host");
-				}
-			};
-			var receive = function(service, message, command, status, tag) {
-				if (status != 0) {
-					alert("Error in command " + command);
-					return;
-				}
-				if (tag != 0) {
-					// Handle response to previous command
-				} else {
-					// Handle event
-				}
-			};
-			var quit = function() {};
-			console.log(opera);
-			//opera.scopeAddClient(connected, receive, quit, 0);
-		}
-	
+		this.initted = true;
 	},
 	toggleUpsize: function() {
 		if(this.console.mode == this.console.MODES.FULL) {
@@ -167,7 +137,6 @@ window.dung_beetle = {
 		}
 	},
 	dungClick: function(evt) {
-		evt = this.jq(evt);
 		var clicked = this.jq(evt.target);
 		if(clicked.hasClass('dung_color_hover')) {
 			clicked = clicked.parent();
@@ -175,7 +144,7 @@ window.dung_beetle = {
 		var input = this.elements.dung_beetle.find('input');
 
 		// Don't do anything if we click on an active input
-		if(clicked.attr('tag') == 'input') {
+		if(clicked[0].nodeName.toLowerCase() == 'input') {
 			return evt.stopPropagation();
 		}
 
@@ -210,13 +179,7 @@ window.dung_beetle = {
 			this.console.elements.console.html('');
 			this.console.elements.input.val('');
 		}
-		evt.stop();
-	},
-	dblClickEvent: function() {
-		
-	}, 
-	hoverEvent: function() {
-		
+		evt.stopPropagation();
 	},
 	registerTabs: function(tabs) {
 		this.tabs = this.tabs || {};
@@ -665,29 +628,29 @@ window.dung_beetle = {
 			right: parseInt(elem.css('margin-right').toInt())
 		};
 
-		this.elements.overlay.setStyles({'display':'block', 'left':(pos.left+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
-		this.elements.padding.top.setStyles({'display':'block', 'left':pos.left+'px', 'top':pos.top+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
-		this.elements.padding.left.setStyles({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
-		this.elements.padding.bottom.setStyles({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top+size.y)+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.bottom)+'px'});
-		this.elements.padding.right.setStyles({'display':'block', 'left':(pos.left+size.x+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
+		this.elements.overlay.css({'display':'block', 'left':(pos.left+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
+		this.elements.padding.top.css({'display':'block', 'left':pos.left+'px', 'top':pos.top+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
+		this.elements.padding.left.css({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
+		this.elements.padding.bottom.css({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top+size.y)+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.bottom)+'px'});
+		this.elements.padding.right.css({'display':'block', 'left':(pos.left+size.x+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
 
-		this.elements.margin.top.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top-margin.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.top)+'px'});
-		this.elements.margin.left.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top)+'px', 'width':(margin.left)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
-		this.elements.margin.bottom.setStyles({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top+size.y+padding.bottom+padding.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.bottom)+'px'});
-		this.elements.margin.right.setStyles({'display':'block', 'left':(pos.left+size.x+padding.left+padding.right)+'px', 'top':(pos.top)+'px', 'width':(margin.right)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
+		this.elements.margin.top.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top-margin.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.top)+'px'});
+		this.elements.margin.left.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top)+'px', 'width':(margin.left)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
+		this.elements.margin.bottom.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top+size.y+padding.bottom+padding.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.bottom)+'px'});
+		this.elements.margin.right.css({'display':'block', 'left':(pos.left+size.x+padding.left+padding.right)+'px', 'top':(pos.top)+'px', 'width':(margin.right)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
 	},
 	hideElementVisuals: function() {
 		this.dungstatus.visualizing = false;
-		this.elements.overlay.setStyle('display', 'none');
-		this.elements.padding.top.setStyle('display', 'none');
-		this.elements.padding.left.setStyle('display', 'none');
-		this.elements.padding.bottom.setStyle('display', 'none');
-		this.elements.padding.right.setStyle('display', 'none');
+		this.elements.overlay.css('display', 'none');
+		this.elements.padding.top.css('display', 'none');
+		this.elements.padding.left.css('display', 'none');
+		this.elements.padding.bottom.css('display', 'none');
+		this.elements.padding.right.css('display', 'none');
 
-		this.elements.margin.top.setStyle('display', 'none');
-		this.elements.margin.left.setStyle('display', 'none');
-		this.elements.margin.bottom.setStyle('display', 'none');
-		this.elements.margin.right.setStyle('display', 'none');
+		this.elements.margin.top.css('display', 'none');
+		this.elements.margin.left.css('display', 'none');
+		this.elements.margin.bottom.css('display', 'none');
+		this.elements.margin.right.css('display', 'none');
 	},
 	// Display the blue outlines around an element to show it's position
 	outlineElement: function(mixed) {
@@ -739,16 +702,15 @@ window.dung_beetle = {
 		if(!this.dungstatus.realtime_inspect || /dung/.test(evt.target.className) || this.jq(evt.target).parents().hasClass('dung_beetle')) {
 			return;
 		}
-
 		this.dungstatus.indung_lock = true;
-
 		
 		if(this.current_dom_node) {
 			this.current_dom_node.removeClass('dung_dom_selected');
 		}
 
 		if(this.current_element && evt.target != this.current_element[0]) {
-			this.jq(evt).stopPropagation();
+			console.log('stopping ?',evt);
+			evt.stopPropagation();
 			if(!evt.target.className || !/dung/.test(evt.target.className)) {
 				this.inspectElement(evt);
 				this.highlightInDOMView(this.jq(evt.target));
@@ -909,16 +871,16 @@ window.dung_beetle = {
 			}
 
 			// We have an active input
-			var css = this.jq(this.jq(style_pairs[x].children()[0]).next());
+			var css = this.jq(this.jq(style_pairs[x]).children()[0]).next();
 			var first = this.jq(css.children()[0]);
-			var selector = (first && first.get('tag') == 'input') ? first[0].value : css[0].innerHTML;
+			var selector = (first && first[0].nodeName.toLowerCase() == 'input') ? first.val() : css.html();
 
-			css = this.jq(css.next());
-			first = this.jq(css.next());
-			var rule = (first && first.get('tag') == 'input') ? first[0].value : css[0].innerHTML;
-
+			css = css.next();
+			first = css.find(':first');
+			var rule = (first.length && first[0].nodeName.toLowerCase() == 'input') ? first.val() : css.html();
 			str += selector+': '+rule+'; ';
 		}
+		console.log(this.stripTags(this.trim(str)));
 		return this.stripTags(this.trim(str));
 	},
 	addCSSRule: function(selector, attributes) {
@@ -959,7 +921,7 @@ window.dung_beetle = {
 		var selector_span = this.jq(this.jq(css_group.children()[0]).children()[0]);
 		var selector = selector_span[0].innerHTML;
 		css_group.toggleClass('canceled');
-		this.jq(selector_span.next()).first().src = css_group.hasClass('canceled') ? 'dung_cancel.gif' : 'dung_cancel_gray.gif';
+		this.jq(selector_span.next()).find(':first').attr('src', css_group.hasClass('canceled') ? 'dung_cancel.gif' : 'dung_cancel_gray.gif');
 		
 		if(selector == 'element.style') {
 			var style = this.jq(this.getCurrentStyleTag().next());
@@ -999,7 +961,7 @@ window.dung_beetle = {
 				break;
 			}
 		}
-		this.jq('<style type="text/css"></style>').html(css).appendTo(document.body);
+		this.jq('<style type="text/css"></style>').html(css.replace(/~\$~/g, '\n').appendTo(document.body);
 		if(this.cssloads == this.failed.length) {
 			this.parseCSS();
 		}
@@ -1219,7 +1181,7 @@ window.dung_beetle = {
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 			console.log('Dung Beetle:', dung_beetle);
 		},
-		log: function() {
+		blog: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
@@ -1363,10 +1325,10 @@ window.dung_beetle = {
 		elem.html('');
 
 		var edit_input = this.jq('<input />').addClass('edit_input').width(stripped.length * 7).attr('type', 'text')
-			.appendTo(elem).value(stripped).focus().select()
+			.appendTo(elem).val(stripped).focus().select()
 			.keydown(this.bind(this.inputKeyEvent, this))
-			.keyup(this.bind(this.inputKeyEvent, this))[0];
-		edit_input.original_value = this.trim(value);
+			.keyup(this.bind(this.inputKeyEvent, this));
+		edit_input[0].original_value = this.trim(value);
 	},
 	// Key event handler for all input fields when editing values. Determines action based on what input it is
 	inputKeyEvent: function(mixed) {
@@ -1377,17 +1339,17 @@ window.dung_beetle = {
 			this.getKeyPressed(evt);
 		} else {
 			evt = {'key':'esc'};
-			input = mixed;
+			input = this.jq(mixed);
 		}
 		var papa = input.parent();
 		var grandparent = papa.parent();
 		var greatparent = grandparent.parent();
 
-		if(greatparent.first().first().html() == 'element.style') {
+		if(greatparent.find(':first').find(':first').html() == 'element.style') {
 			var style;
 			for(var x=0, children = current_dom_node.children(); x<children.length; x++) {
-				if(children[x].first().html() == 'style') {
-					style = children[x].first().next();
+				if(children[x].find(':first').html() == 'style') {
+					style = children[x].find(':first').next();
 				}
 			}
 			style.html(this.splatStyles(greatparent));
@@ -1395,16 +1357,16 @@ window.dung_beetle = {
 
 		// They key event came from a CSS attribute, like "border" in "border: 3px solid blue"
 		if(papa.hasClass('dung_attr')) {
-			if(evt.key != 'backspace') { this.autoComplete(input, valid_css_elements); }
-			if(input.value.indexOf(':') > 1 || ((evt.key == 'tab' || evt.key == 'enter') && input.value.length > 0)) {
-				input.value(this.trim(input.value().replace(':', '')));
-				input.parent().html(this.colorize(input.value()));
+			if(evt.key != 'backspace') { this.autoComplete(input, this.constants.valid_css_elements); }
+			if(input.val().indexOf(':') > 1 || ((evt.key == 'tab' || evt.key == 'enter') && input.val().length > 0)) {
+				input.val(this.trim(input.val().replace(':', '')));
+				input.parent().html(this.colorize(input.val()));
 
 				// Either focus on the next box or...
-				var nextInput = papa.next().first();
+				var nextInput = papa.next().find(':first');
 				if(!nextInput.length) {
 					// Focus on the next area for editing, hack because IE does not focus, probably race condition
-					setTimeout(function() {papa.next().first().focus();}, 1);
+					setTimeout(function() {papa.next().find(':first').focus();}, 1);
 				} else {
 					evt.stopPropagation();
 					grandparent.removeClass('new');
@@ -1412,11 +1374,11 @@ window.dung_beetle = {
 						this.compileStyles(greatparent);
 					} else {
 						this.editValue(papa.next());
-						setTimeout(function() {papa.next().first().select();}, 1);
+						setTimeout(function() {papa.next().find(':first').select();}, 1);
 					}
 				}
 			} else if(evt.key == 'esc' || evt.key == 'enter' || evt.key == 'tab') {
-				input.value = input.value.trim();
+				input.val(this.trim(input.val()));
 				if(grandparent.hasClass('new')) {
 					grandparent.remove();
 				} else {
@@ -1428,15 +1390,15 @@ window.dung_beetle = {
 		// The key event came from a CSS value, like "3px solid blue" in "border: 3px solid blue"
 		} else if(papa.hasClass('dung_val')) {
 			this.compileStyles(greatparent);
-			if(evt.key != 'backspace') { this.autoComplete(input, input_ac_words); }
-			if((evt.key == 'tab' || evt.key == 'enter') && input.value.length > 0) {
-				input.value(this.trim(input.value().replace(';', '')));
-				input.parent().html(this.colorize(input.value()));
+			if(evt.key != 'backspace') { this.autoComplete(input, this.constants.input_ac_words); }
+			if((evt.key == 'tab' || evt.key == 'enter') && input.val.length > 0) {
+				input.val(this.trim(input.val().replace(';', '')));
+				input.parent().html(this.colorize(input.val()));
 				grandparent.removeClass('new');
 				this.compileStyles(greatparent);
 			} else if((evt.key == 'esc' || evt.key == 'tab'|| evt.key == 'enter') && !grandparent.hasClass('new')) {
-				input.value(this.trim(input.value()));
-				if(grandparent.hasClass('new') || input.value().length == 0) {
+				input.val(this.trim(input.val()));
+				if(grandparent.hasClass('new') || input.val().length == 0) {
 					grandparent.remove();
 				} else {
 					grandparent.removeClass('new');
@@ -1448,20 +1410,20 @@ window.dung_beetle = {
 		} else if(papa.hasClass('dung_html_prop') || papa.hasClass('dung_attr_edit')) {
 			var isAttribute = papa.hasClass('dung_html_prop');
 			if(!isAttribute) {
-				applyAttributes(greatparent);
+				this.applyAttributes(greatparent);
 			}
-			current_dom_node = greatparent;
+			this.current_dom_node = greatparent;
 			current_element = current_dom_node.hover_highlight;
-			if((input.value.indexOf('=') > 1 && isAttribute) || (evt.key == 'tab' && input.value.length > 0)) {
-				papa.innerHTML = input.value;
+			if((input.val.indexOf('=') > 1 && isAttribute) || (evt.key == 'tab' && input.val.length > 0)) {
+				papa.innerHTML = input.val;
 				input.destroy();
-				applyAttributes(greatparent);
-			} else if(evt.key == 'enter' && input.value.trim().length > 0) {
-				if(input.value != input.original_value) {
+				this.applyAttributes(greatparent);
+			} else if(evt.key == 'enter' && input.val.trim().length > 0) {
+				if(input.val != input.original_value) {
 					 current_element.erase(input.original_value);
 				}
-				papa.innerHTML = input.value;
-				applyAttributes(greatparent);
+				papa.innerHTML = input.val;
+				this.applyAttributes(greatparent);
 				input.destroy();
 			} else if(evt.key == 'enter' || evt.key == 'tab') {
 				if(isAttribute) {
@@ -1470,7 +1432,7 @@ window.dung_beetle = {
 				} else {
 					papa.innerHTML = '';
 				}
-				applyAttributes(greatparent);
+				this.applyAttributes(greatparent);
 				grandparent.destroy();
 			} else if(evt.key == 'esc') {
 				papa.innerHTML = input.original_value;
@@ -1478,11 +1440,82 @@ window.dung_beetle = {
 		}
 
 		// Auto size the input field
-		input.setStyle('width', ((input.value.length * 7) + 8)+'px');
+		input.width((input.val().length * 7) + 8);
+	},
+	// Applies attributes set from DOM editing to the actual element in page body
+	applyAttributes: function(tag_open, set_to) {
+		var children = tag_open.children();
+		for(var x=0, l=children.length; x<l; x ++) {
+			// Get the attribute (like "class") and the value (like "content") from either input box or already-compiled
+			var first = this.jq(children[x]).find(':first').find(':first');
+			var attr = first ? first.val() : this.jq(children[x]).find(':first').html();
+
+			first = this.jq(children[x]).find(':first').next().find(':first');
+			var value = first ? first.val() : this.jq(children[x]).find(':first').next().html();
+
+			if(attr == 'style') {
+				current_element.removeAttr('style');
+				var styles = value.split(';');
+				for(var y=0, l=styles.length; y<l; y++) {
+					var pair = this.trim(styles[y]).split(':');
+					current_element.css(pair[0], pair[1]);
+				}
+			} else {
+				current_element.attr(attr, set_to ? null : value);
+			}
+		}
+		this.inspectElement(current_element);
+	},
+	// Function to handle all console double clicks
+	dblClickHandler: function(evt) {
+		var elem = this.jq(evt.target);
+
+		// Double click on a CSS rule, so insert a new element
+		if(elem.hasClass('dung_css_selector') || elem.parent().hasClass('dung_css_selector')) {
+			var style_group = this.jq('<div></div>').addClass('dung_pair new');
+			var css_group = elem.hasClass('dung_pair') || elem.hasClass('css_title') ? elem.parent() : elem;
+
+			// Search for a style attribute on the element
+			if(css_group.find(':first').find(':first').html() == 'element.style') {
+				var style = this.getCurrentStyleTag(); // The div of the attributes of the element
+				if(style) {
+					var last = current_dom_node.last();
+					var html = ' <span class="dung_html_prop">style</span>="<span class="dung_attr_edit"></span><span class="dung_html_attr">"</span>';
+					if(last) {
+						this.jq('<span></span').addClass('dung_html_attr').insertAfter(last).html(html);
+					} else {
+						current_dom_node.html(current_dom_node.html().substring(0, current_dom_node.html().length - 4) + '<span class="dung_html_attr">' + html + '</span>&gt;');
+					}
+				}
+			}
+
+			//Create the inputs
+			style_group.insertBefore(css_group.children()[1]).html('<div class="cancel"></div><span class="dung_attr"><input class="edit_input" /></span>: <span class="dung_val"><input class="edit_input" /></span>;');
+
+			// Wire the two inputs for clicking
+			style_group.find(':first').next().find(':first').keydown(this.bind(this.inputKeyEvent, this)).keyup(this.bind(this.inputKeyEvent, this)).focus();
+			this.jq(style_group.children()[2]).find(':first').keydown(this.bind(this.inputKeyEvent, this)).keyup(this.bind(this.inputKeyEvent, this)).focus();
+		}
+	},
+	hoverHandler: function(evt) {
+		var elem = this.jq(evt.target);
+		var highlight = elem[0].hover_highlight;
+		if(highlight && elem.hasClass('dung_tag_open')) {
+			this.visualizeElement(highlight);
+		} else if(this.dungstatus.visualizing) {
+			this.hideElementVisuals();
+		}
+		if(elem.hasClass('dung_color_hover')) {
+			this.dungstatus.color_hover.enabled = true;
+			this.elements.color_hover.css({'display':'block', 'background-color':elem.html()});
+		} else if(this.dungstatus.color_hover.enabled == true) {
+			this.dungstatus.color_hover.enabled = false;
+			this.elements.color_hover.css('display', 'none');
+		}
 	},
 	// Auto-complete for input fields. Suggestions come from object
 	autoComplete: function(input, match_obj) {
-		var orig_value = input.value();
+		var orig_value = input.val();
 		if(orig_value.length == 0) {return;}
 
 		var match = orig_value.match(/[^ ]+($)/);
@@ -1496,12 +1529,12 @@ window.dung_beetle = {
 				return;
 			}
 			if(word.indexOf(wordToTest) == 0) {
-				//input.value = orig_value.replace(new RegExp(word, 'g'), word.charAt(0)+'###'+word.substr(1));
-				input.value(orig_value.replace(new RegExp(wordToTest+'$'), '') + word);
-				input.value(input.value().replace('###', ''));
+				//input.val = orig_value.replace(new RegExp(word, 'g'), word.charAt(0)+'###'+word.substr(1));
+				input.val(orig_value.replace(new RegExp(wordToTest+'$'), '') + word);
+				input.val(input.val().replace('###', ''));
 
 				if(input[0].setSelectionRange) {
-					input[0].setSelectionRange(orig_value.length, input.value.length);
+					input[0].setSelectionRange(orig_value.length, input.val().length);
 				} else {
 					range = input[0].createTextRange();
 					range.findText(word.substr(wordToTest.length), -2);
@@ -1642,6 +1675,7 @@ window.dung_beetle = {
 	type: function(obj){
 		if (obj == undefined) return 'undefined';
 		if (obj === null) return 'null';
+		if(obj.stopImmediatePropagation) return 'event';
 		if (typeof obj.length == 'number' && typeof obj.push == 'function') return 'array';
 		if (obj.nodeName){
 			switch (obj.nodeType){
@@ -1697,128 +1731,3 @@ window.dung_beetle = {
 		this.uncalled = setTimeout(this.bind(func, this), timeout);
 	}
 };
-
-function inspectHover(event) {
-	var e = new Event(event).stop();
-	var elem = e.target;
-}
-
-// Handles all major clicks on the console. Stops event bubbling and determines action
-function consoleClick(event) {
-}
-
-function consoleHover(event) {
-	var e = new Event(event).stop();
-	var elem = new Element(e.target);
-	var highlight = elem.hover_highlight;
-	if(highlight && elem.hasClass('dung_tag_open')) {
-		visualizeElement(highlight);
-	} else if(dung_status.visualizing) {
-		hideElementVisuals();
-	}
-	if(elem.hasClass('dung_color_hover')) {
-		dung_color_hover.enabled = true;
-		dung_color_hover.setStyles({'display':'block', 'background-color':elem.innerHTML});
-	} else if(dung_color_hover.enabled == true) {
-		dung_color_hover.enabled = false;
-		dung_color_hover.setStyle('display', 'none');
-	}
-}
-
-// Function to handle all console double clicks
-function consoleDblClick(event) {
-	var e = new Event(event);
-	var elem = new Element(e.target);
-
-	// Double click on a CSS rule, so insert a new element
-	if(elem.hasClass('dung_css_selector') || elem.getParent().hasClass('dung_css_selector')) {
-		var style_group = new Element('div', {'class':'dung_pair new'});
-		var css_group = e.target.hasClass('dung_pair') || e.target.hasClass('css_title') ? e.target.getParent() : e.target;
-
-		// Search for a style attribute on the element
-		if(css_group.first().first().innerHTML == 'element.style') {
-			var style = getCurrentStyleTag(); // The div of the attributes of the element
-/* 			for(var x=0, children = current_dom_node.getChildren(); x<children.length; x++) {
-				if(children[x].first().innerHTML.toString() == 'style') {
-					style = children[x].first();
-					break;
-				}
-			} */
-			if(!$defined(style)) {
-				var last = current_dom_node.getLast();
-				var html = ' <span class="dung_html_prop">style</span>="<span class="dung_attr_edit"></span><span class="dung_html_attr">"</span>';
-				if(last) {
-					new Element('span', {'class':'dung_html_attr'}).inject(last, 'after').innerHTML = html;
-				} else {
-					current_dom_node.innerHTML = current_dom_node.innerHTML.substring(0, current_dom_node.innerHTML.length - 4) + '<span class="dung_html_attr">' + html + '</span>&gt;';
-				}
-			}
-		}
-
-		//Create the inputs
-		style_group.injectBefore(css_group.getChildren()[1]).innerHTML = '<div class="cancel"></div><span class="dung_attr"><input class="edit_input" /></span>: <span class="dung_val"><input class="edit_input" /></span>;';
-
-		// Wire the two inputs for clicking
-		style_group.first().getNext().first().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent).focus();
-		style_group.getChildren()[2].first().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent);
-	}
-}
-
-// Key handler for console
-function consoleKeyEvent(event) {
-}
-
-function executeConsole() {
-}
-
-// Applies attributes set from DOM editing to the actual element in page body
-function applyAttributes(tag_open, set_to) {
-	var children = tag_open.getChildren();
-	for(var x=0; x<children.length; x ++) {
-		// Get the attribute (like "class") and the value (like "content") from either input box or already-compiled
-		var first = children[x].getFirst().getFirst();
-		var attr = first ? first.value : children[x].getFirst().innerHTML;
-
-		first = children[x].getFirst().getNext().getFirst();
-		var value = first ? first.value : children[x].getFirst().getNext().innerHTML;
-
-		if(attr == 'style') {
-			current_element.erase('style');
-			var styles = value.split(';');
-			for(var y=0; y<styles.length; y++) {
-				var pair = styles[y].trim().split(':');
-				current_element.setStyle(pair[0], pair[1]);
-			}
-		} else {
-			current_element.set(attr, set_to ? null : value);
-		}
-	}
-	inspectElement(current_element);
-}
-
-function getTags(elem) {
-	if(elem == null) { return ''; }
-	var holder = new Element('div', {});
-	elem.clone().inject(holder);
-	var tags = holder.innerHTML;
-	//tags = tags.replace(/>([^<]+)</, '>'++'<');
-	holder.dispose();
-	return tags;
-}
-
-// Seat the console on the bottom of the screen
-function stickConsole() {
-}
-
-function isValidCSSAttr(str) {
-	for(var x=0; x<valid_css_elements.length; x++) {
-		if(valid_css_elements[x] == str) {
-			return true;
-		}
-	}
-	return false;
-}
-
-function stopKeyDown(event) {
-	var e = new Event(event).stop();
-}
