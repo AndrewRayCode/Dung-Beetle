@@ -17,8 +17,7 @@ public class DungProxy {
 				}
 			}
 			// Print a start-up message
-			System.out.println("Starting proxy for " + host + ":" + remoteport
-					+ " on port " + localport);
+			System.out.println("Starting proxy for " + host + ":" + remoteport + " on port " + localport);
 			// And start running the server
 			runServer(host, remoteport, localport); // never returns
 		} catch (Exception e) {
@@ -31,11 +30,11 @@ public class DungProxy {
 	}
 
 	public static String cssReturn(String css, String url) {
-		return "dung_beetle.catchCss('"+escapeStr(css)+"', '"+url+"')";
+		return "dung_beetle.catchCSS('"+escapeStr(css)+"', '"+url+"')";
 	}
 
 	public static String jsReturn(String js, String url) {
-		return "dung_beetle.catchJs('"+escapeStr(js)+"', '"+url+"')";
+		return "dung_beetle.catchJS('"+escapeStr(js)+"', '"+url+"')";
 	}
 	
 	/**

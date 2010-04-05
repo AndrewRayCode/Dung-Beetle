@@ -87,7 +87,7 @@ window.dung_beetle = {
 		this.jq(window).bind('scroll', this.bind(this.stick, this)).bind('resize', this.bind(this.stick, this));
 		this.jq('body').bind('mouseover', this.bind(this.bodyHoverEvent, this)).click(this.bind(this.bodyClickEvent, this));
 
-		this.checkCSSLoaded();
+		this.analyzeCSS();
 		this.tree = new this.dungTree(this.elements.display, {
 			jq: this.jq,
 			dung: this
@@ -432,7 +432,7 @@ window.dung_beetle = {
 	// For example, '.class div#id span h3' will match the selector of 'div#id h3'
 	matchFullSelector: function(test, selector) {
 		// Craziness to escape tags with *
-		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]d~~d').replace(/\*/g, '\\*').replace(/d~~d/g, '*') + '( |$)';
+		var regex = test.replace(/\./g, ' \\.').split(/[ ]+/).join(' [\\S\\s]d~~d').replace(/\*/g, '\\*').replace(/\+/g, '\\+').replace(/d~~d/g, '*') + '( |$)';
 		return new RegExp(regex, 'i').test(selector);
 	}, 
 	// Determine CSS inheritance by "weight" of selectors (heaviest is most specific). Example: "#bob .hi" outweights ".hi"
@@ -778,26 +778,34 @@ window.dung_beetle = {
 	noProxy: function(evt) {
 		console.warn('The following CSS file will not be loaded unless you are running the DungProxy.');
 	},
-	checkCSSLoaded: function() {
-		var failed = [];
+	analyzeCSS: function() {
+		this.failed = [];
 		this.styleSheets = [];
 		for(var x=0, l=document.styleSheets.length; x<l; x++) {
 			try {
 				var styleSheet = document.styleSheets[x];
 				styleSheet.rules || styleSheet.cssRules;
-				this.styleSheets.push(styleSheet);
 			} catch(e) {
 				if(styleSheet.href.indexOf('dung-styles.css') < 0) {
-					this.jq('<script src="'+this.proxyUrl(styleSheet.href)+'" />').appendTo(document.body).error(this.bind(this.noProxy, this));
-					failed.push(styleSheet.href);
+					this.jq('<script src="'+this.proxyUrl(styleSheet.href)+'"></script>').appendTo(document.body).error(this.bind(this.noProxy, this));
+					this.failed.push(styleSheet.href);
 				}
 			}
 		}
-		if(!failed.length) {
-			this.CSS = this.parseCSS();
+		if(!this.failed.length) {
+			this.parseCSS();
 		}
 	},
 	parseCSS: function() {
+		for(var x=0, l=document.styleSheets.length; x<l; x++) {
+			var styleSheet = document.styleSheets[x];
+			try {
+				styleSheet.rules || styleSheet.cssRules;
+				this.styleSheets.push(styleSheet);
+			} catch(e) {
+			}
+		}
+
 		var styleSheet, loc, css={};
 		for(var x=0; x <this.styleSheets.length; x++) {
 			styleSheet = this.styleSheets[x];
@@ -810,7 +818,7 @@ window.dung_beetle = {
                 }
 			}
 		}
-		return css;
+		this.CSS = css;
 	},
 	setMode: function(mode) {
 		this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
@@ -981,12 +989,22 @@ window.dung_beetle = {
 		}
 		console.error('Warning: Rule to toggle not found');
 	},
-	catchCss: function(css, url) {
-		this.jq('link[href='+url+']').remove();
+	catchCSS: function(css, url) {
+		url = url.replace(/\?.+/, '');
+		this.cssloads = this.cssloads ? this.cssloads + 1 : 1;
+		var links = this.jq('link');
+		for(var x=0; x<links.length; x++) {
+			if(this.jq(links[x]).attr('href').indexOf(url) > -1) {
+				this.jq(links[x]).remove();
+				break;
+			}
+		}
 		this.jq('<style type="text/css"></style>').html(css).appendTo(document.body);
-		this.parseCSS();
+		if(this.cssloads == this.failed.length) {
+			this.parseCSS();
+		}
 	},
-	catchJs: function(js, url) {
+	catchJS: function(js, url) {
 		console.log('WOOHOO ',js);
 	},
 	// The console object, gives us .log, .warn, .error
@@ -1201,7 +1219,7 @@ window.dung_beetle = {
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 			console.log('Dung Beetle:', dung_beetle);
 		},
-		log: function() {
+		blog: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
