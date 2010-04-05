@@ -58,3 +58,7 @@ Things to implement:
 - up / down keyboard arrow pixel nudging, like firebug does
 - minimize button
 
+--------------------
+Errors I know about:
+--------------------
+ - If you get "invalid quanitifier" that is from the regex being built in the matchFullSelector function not escaping the proper characters. A CSS rule in the style sheet might have a character which needs to be escaped before being put into a regex

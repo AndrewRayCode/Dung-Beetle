@@ -879,7 +879,7 @@ window.dung_beetle = {
 		}
 	},
 	compileStyles: function(style_group) {
-		var styles = splatStyles(style_group);
+		var styles = this.splatStyles(style_group);
 		var first = this.jq(this.jq(style_group.children()[0]).children()[0]);
 		var selector = first.innerHTML;
 		if(selector == 'element.style') {
@@ -919,7 +919,7 @@ window.dung_beetle = {
 
 			str += selector+': '+rule+'; ';
 		}
-		return this.dungStripTags(this.trim(str));
+		return this.stripTags(this.trim(str));
 	},
 	addCSSRule: function(selector, attributes) {
 		var ss = this.styleSheets;
@@ -1219,7 +1219,7 @@ window.dung_beetle = {
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 			console.log('Dung Beetle:', dung_beetle);
 		},
-		blog: function() {
+		log: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
@@ -1348,6 +1348,173 @@ window.dung_beetle = {
 		},
 		elements: {}
 	},
+	// Turn an editable value into an input box
+	editValue: function(mixed) {
+		var elem;
+		if(this.type(mixed) == 'event') {
+			var e = new Event(mixed).stop();
+			var elem = this.jq(e.target);
+		} else {
+			elem = mixed;
+		}
+
+		var value = elem.html();
+		var stripped = this.stripTags(this.trim(value));
+		elem.html('');
+
+		var edit_input = this.jq('<input />').addClass('edit_input').width(stripped.length * 7).attr('type', 'text')
+			.appendTo(elem).value(stripped).focus().select()
+			.keydown(this.bind(this.inputKeyEvent, this))
+			.keyup(this.bind(this.inputKeyEvent, this))[0];
+		edit_input.original_value = this.trim(value);
+	},
+	// Key event handler for all input fields when editing values. Determines action based on what input it is
+	inputKeyEvent: function(mixed) {
+		var evt, input;
+		if(this.type(mixed) == 'event') {
+			evt = mixed;
+			input = this.jq(evt.target);
+			this.getKeyPressed(evt);
+		} else {
+			evt = {'key':'esc'};
+			input = mixed;
+		}
+		var papa = input.parent();
+		var grandparent = papa.parent();
+		var greatparent = grandparent.parent();
+
+		if(greatparent.first().first().html() == 'element.style') {
+			var style;
+			for(var x=0, children = current_dom_node.children(); x<children.length; x++) {
+				if(children[x].first().html() == 'style') {
+					style = children[x].first().next();
+				}
+			}
+			style.html(this.splatStyles(greatparent));
+		}
+
+		// They key event came from a CSS attribute, like "border" in "border: 3px solid blue"
+		if(papa.hasClass('dung_attr')) {
+			if(evt.key != 'backspace') { this.autoComplete(input, valid_css_elements); }
+			if(input.value.indexOf(':') > 1 || ((evt.key == 'tab' || evt.key == 'enter') && input.value.length > 0)) {
+				input.value(this.trim(input.value().replace(':', '')));
+				input.parent().html(this.colorize(input.value()));
+
+				// Either focus on the next box or...
+				var nextInput = papa.next().first();
+				if(!nextInput.length) {
+					// Focus on the next area for editing, hack because IE does not focus, probably race condition
+					setTimeout(function() {papa.next().first().focus();}, 1);
+				} else {
+					evt.stopPropagation();
+					grandparent.removeClass('new');
+					if(evt.key == 'enter') {
+						this.compileStyles(greatparent);
+					} else {
+						this.editValue(papa.next());
+						setTimeout(function() {papa.next().first().select();}, 1);
+					}
+				}
+			} else if(evt.key == 'esc' || evt.key == 'enter' || evt.key == 'tab') {
+				input.value = input.value.trim();
+				if(grandparent.hasClass('new')) {
+					grandparent.remove();
+				} else {
+					grandparent.removeClass('new');
+					papa.html(input[0].original_value);
+					input.remove();
+				}
+			}
+		// The key event came from a CSS value, like "3px solid blue" in "border: 3px solid blue"
+		} else if(papa.hasClass('dung_val')) {
+			this.compileStyles(greatparent);
+			if(evt.key != 'backspace') { this.autoComplete(input, input_ac_words); }
+			if((evt.key == 'tab' || evt.key == 'enter') && input.value.length > 0) {
+				input.value(this.trim(input.value().replace(';', '')));
+				input.parent().html(this.colorize(input.value()));
+				grandparent.removeClass('new');
+				this.compileStyles(greatparent);
+			} else if((evt.key == 'esc' || evt.key == 'tab'|| evt.key == 'enter') && !grandparent.hasClass('new')) {
+				input.value(this.trim(input.value()));
+				if(grandparent.hasClass('new') || input.value().length == 0) {
+					grandparent.remove();
+				} else {
+					grandparent.removeClass('new');
+					papa.html(input[0].original_value);
+					input.remove();
+				}
+			}
+		// Event fired from DOM node
+		} else if(papa.hasClass('dung_html_prop') || papa.hasClass('dung_attr_edit')) {
+			var isAttribute = papa.hasClass('dung_html_prop');
+			if(!isAttribute) {
+				applyAttributes(greatparent);
+			}
+			current_dom_node = greatparent;
+			current_element = current_dom_node.hover_highlight;
+			if((input.value.indexOf('=') > 1 && isAttribute) || (evt.key == 'tab' && input.value.length > 0)) {
+				papa.innerHTML = input.value;
+				input.destroy();
+				applyAttributes(greatparent);
+			} else if(evt.key == 'enter' && input.value.trim().length > 0) {
+				if(input.value != input.original_value) {
+					 current_element.erase(input.original_value);
+				}
+				papa.innerHTML = input.value;
+				applyAttributes(greatparent);
+				input.destroy();
+			} else if(evt.key == 'enter' || evt.key == 'tab') {
+				if(isAttribute) {
+					papa.innerHTML = input.original_value;
+					papa.next().html('');
+				} else {
+					papa.innerHTML = '';
+				}
+				applyAttributes(greatparent);
+				grandparent.destroy();
+			} else if(evt.key == 'esc') {
+				papa.innerHTML = input.original_value;
+			}
+		}
+
+		// Auto size the input field
+		input.setStyle('width', ((input.value.length * 7) + 8)+'px');
+	},
+	// Auto-complete for input fields. Suggestions come from object
+	autoComplete: function(input, match_obj) {
+		var orig_value = input.value();
+		if(orig_value.length == 0) {return;}
+
+		var match = orig_value.match(/[^ ]+($)/);
+		if( match == null) {return;}
+
+		var wordToTest = match[0];
+
+		for(var x=0; x <match_obj.length; x++) {
+			var word = match_obj[x];
+			if(word == wordToTest) {
+				return;
+			}
+			if(word.indexOf(wordToTest) == 0) {
+				//input.value = orig_value.replace(new RegExp(word, 'g'), word.charAt(0)+'###'+word.substr(1));
+				input.value(orig_value.replace(new RegExp(wordToTest+'$'), '') + word);
+				input.value(input.value().replace('###', ''));
+
+				if(input[0].setSelectionRange) {
+					input[0].setSelectionRange(orig_value.length, input.value.length);
+				} else {
+					range = input[0].createTextRange();
+					range.findText(word.substr(wordToTest.length), -2);
+					range.select();
+				}
+				break;
+			}
+		}
+	},
+	// Strip all HTML tags from a value
+	stripTags: function(str) {
+		return str.replace(/\<[^>]+\>/g, '');
+	},
 	spamThemAll: function(evt) {
 		window.open(this.settings.my_site, '_blank');	
 	},
@@ -1399,7 +1566,7 @@ window.dung_beetle = {
 			'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen'],
 		input_ac_words: ['top', 'bottom', 'left', 'right', 'center', '!important', 'solid', 'inset', 'ridge', 'none', 'dashed', 'dotted',
 			'relative', 'absolute', 'no-repeat', 'repeat-x', 'repeat-y', 'scroll', 'pointer', 'text'],
-		keyLabels: { 38:'up', 40:'down', 37:'left', 39:'right', 13:'enter', 8:'backspace'}
+		keyLabels: { 38:'up', 40:'down', 37:'left', 39:'right', 13:'enter', 8:'backspace', 27:'esc'}
 	},
 	elements: {
 		outlines: {
@@ -1536,29 +1703,6 @@ function inspectHover(event) {
 	var elem = e.target;
 }
 
-// Turn an editable value into an input box
-function editValue(mixed) {
-	var elem;
-	if($type(mixed) == 'event') {
-		var e = new Event(mixed).stop();
-		var elem = e.target;
-	} else {
-		elem = mixed;
-	}
-
-	var value = elem.innerHTML;
-	var stripped = dungStripTags(value.trim());
-	elem.set('text', '');
-
-	var edit_input = new Element('input', {'class':'edit_input', 'style':'width:'+(stripped.length * 7)+'px;'});
-	edit_input.original_value = value.trim();
-	edit_input.inject(elem).set('value', stripped).focus();
-	edit_input.select();
-
-	edit_input.addEvent('keydown', inputKeyEvent);
-	edit_input.addEvent('keyup', inputKeyEvent);
-}
-
 // Handles all major clicks on the console. Stops event bubbling and determines action
 function consoleClick(event) {
 }
@@ -1592,11 +1736,11 @@ function consoleDblClick(event) {
 		var css_group = e.target.hasClass('dung_pair') || e.target.hasClass('css_title') ? e.target.getParent() : e.target;
 
 		// Search for a style attribute on the element
-		if(css_group.getFirst().getFirst().innerHTML == 'element.style') {
+		if(css_group.first().first().innerHTML == 'element.style') {
 			var style = getCurrentStyleTag(); // The div of the attributes of the element
 /* 			for(var x=0, children = current_dom_node.getChildren(); x<children.length; x++) {
-				if(children[x].getFirst().innerHTML.toString() == 'style') {
-					style = children[x].getFirst();
+				if(children[x].first().innerHTML.toString() == 'style') {
+					style = children[x].first();
 					break;
 				}
 			} */
@@ -1615,8 +1759,8 @@ function consoleDblClick(event) {
 		style_group.injectBefore(css_group.getChildren()[1]).innerHTML = '<div class="cancel"></div><span class="dung_attr"><input class="edit_input" /></span>: <span class="dung_val"><input class="edit_input" /></span>;';
 
 		// Wire the two inputs for clicking
-		style_group.getFirst().getNext().getFirst().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent).focus();
-		style_group.getChildren()[2].getFirst().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent);
+		style_group.first().getNext().first().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent).focus();
+		style_group.getChildren()[2].first().addEvent('keydown', inputKeyEvent).addEvent('keyup', inputKeyEvent);
 	}
 }
 
@@ -1626,118 +1770,6 @@ function consoleKeyEvent(event) {
 
 function executeConsole() {
 }
-
-// Key event handler for all input fields when editing values. Determines action based on what input it is
-function inputKeyEvent(mixed) {
-	var event, input;
-	if($type(mixed) == 'event') {
-		event = mixed;
-		input = event.target;
-	} else {
-		event = {'key':'esc'};
-		input = mixed;
-	}
-	var parent = input.getParent();
-	var grandparent = parent.getParent();
-	var greatparent = grandparent.getParent();
-
-	if(greatparent.getFirst().getFirst().innerHTML == 'element.style') {
-		var style;
-		for(var x=0, children = current_dom_node.getChildren(); x<children.length; x++) {
-			if(children[x].getFirst().innerHTML.toString() == 'style') {
-				style = children[x].getFirst().getNext();
-			}
-		}
-		style.innerHTML = splatStyles(greatparent);
-	}
-
-	// They key event came from a CSS attribute, like "border" in "border: 3px solid blue"
-	if(parent.hasClass('dung_attr')) {
-		if(event.key != 'backspace') { autoComplete(input, valid_css_elements); }
-		if(input.value.indexOf(':') > 1 || ((event.key == 'tab' || event.key == 'enter') && input.value.length > 0)) {
-			input.value = input.value.replace(':', '').trim();
-			input.getParent().innerHTML = this.colorize(input.value);
-
-			// Either focus on the next box or...
-			var nextInput = parent.getNext().getFirst();
-			if(nextInput != null) {
-				// Focus on the next area for editing, hack because IE does not focus, probably race condition
-				setTimeout(function() {parent.getNext().getFirst().focus();}, 1);
-			} else {
-				new Event(event).stop();
-				grandparent.removeClass('new');
-				if(event.key == 'enter') {
-					compileStyles(greatparent);
-				} else {
-					editValue(parent.getNext());
-					setTimeout(function() {parent.getNext().getFirst().select();}, 1);
-				}
-			}
-		} else if(event.key == 'esc' || event.key == 'enter' || event.key == 'tab') {
-			input.value = input.value.trim();
-			if(grandparent.hasClass('new')) {
-				grandparent.destroy();
-			} else {
-				grandparent.removeClass('new');
-				parent.innerHTML = input.original_value;
-				input.destroy();
-			}
-		}
-	// The key event came from a CSS value, like "3px solid blue" in "border: 3px solid blue"
-	} else if(parent.hasClass('dung_val')) {
-		compileStyles(greatparent);
-		if(event.key != 'backspace') { autoComplete(input, input_ac_words); }
-		if((event.key == 'tab' || event.key == 'enter') && input.value.length > 0) {
-			input.value = input.value.replace(';', '').trim();
-			input.getParent().innerHTML = this.colorize(input.value);
-			grandparent.removeClass('new');
-			compileStyles(greatparent);
-		} else if((event.key == 'esc' || event.key == 'tab'|| event.key == 'enter') && !grandparent.hasClass('new')) {
-			input.value = input.value.trim();
-			if(grandparent.hasClass('new') || input.value.length == 0) {
-				grandparent.destroy();
-			} else {
-				grandparent.removeClass('new');
-				parent.innerHTML = input.original_value;
-				input.destroy();
-			}
-		}
-	// Event fired from DOM node
-	} else if(parent.hasClass('dung_html_prop') || parent.hasClass('dung_attr_edit')) {
-		var isAttribute = parent.hasClass('dung_html_prop');
-		if(!isAttribute) {
-			applyAttributes(greatparent);
-		}
-		current_dom_node = greatparent;
-		current_element = current_dom_node.hover_highlight;
-		if((input.value.indexOf('=') > 1 && isAttribute) || (event.key == 'tab' && input.value.length > 0)) {
-			parent.innerHTML = input.value;
-			input.destroy();
-			applyAttributes(greatparent);
-		} else if(event.key == 'enter' && input.value.trim().length > 0) {
-			if(input.value != input.original_value) {
-				 current_element.erase(input.original_value);
-			}
-			parent.innerHTML = input.value;
-			applyAttributes(greatparent);
-			input.destroy();
-		} else if(event.key == 'enter' || event.key == 'tab') {
-			if(isAttribute) {
-				parent.innerHTML = input.original_value;
-				parent.getNext().innerHTML = '';
-			} else {
-				parent.innerHTML = '';
-			}
-			applyAttributes(greatparent);
-			grandparent.destroy();
-		} else if(event.key == 'esc') {
-			parent.innerHTML = input.original_value;
-		}
-	}
-
-	// Auto size the input field
-	input.setStyle('width', ((input.value.length * 7) + 8)+'px');
-};
 
 // Applies attributes set from DOM editing to the actual element in page body
 function applyAttributes(tag_open, set_to) {
@@ -1785,43 +1817,6 @@ function isValidCSSAttr(str) {
 		}
 	}
 	return false;
-}
-
-// Auto-complete for input fields. Suggestions come from object
-function autoComplete(input, match_obj) {
-	var orig_value = input.value;
-	if(orig_value.length == 0) {return;}
-
-	var match = orig_value.match(/[^ ]+($)/);
-	if( match == null) {return;}
-
-	var wordToTest = match[0];
-
-	for(var x=0; x <match_obj.length; x++) {
-		var word = match_obj[x];
-		if(word == wordToTest) {
-			return;
-		}
-		if(word.indexOf(wordToTest) == 0) {
-			input.value = orig_value.replace(new RegExp(word, 'g'), word.charAt(0)+'###'+word.substr(1));
-			input.value = orig_value.replace(new RegExp(wordToTest+'$'), '') + word;
-			input.value = input.value.replace('###', '');
-
-			if(input.setSelectionRange) {
-				input.setSelectionRange(orig_value.length, input.value.length);
-			} else {
-				range = input.createTextRange();
-				range.findText(word.substr(wordToTest.length), -2);
-				range.select();
-			}
-			break;
-		}
-	}
-}
-
-// Strip all HTML tags from a value
-function dungStripTags(str) {
-	return str.replace(/\<[^>]+\>/g, '');
 }
 
 function stopKeyDown(event) {
