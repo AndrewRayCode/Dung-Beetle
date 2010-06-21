@@ -961,7 +961,7 @@ window.dung_beetle = {
 				break;
 			}
 		}
-		this.jq('<style type="text/css"></style>').html(css.replace(/~\$~/g, '\n').appendTo(document.body);
+		this.jq('<style type="text/css"></style>').html(css.replace(/~\$~/g, '\n')).appendTo(document.body);
 		if(this.cssloads == this.failed.length) {
 			this.parseCSS();
 		}
