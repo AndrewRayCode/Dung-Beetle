@@ -230,9 +230,6 @@ window.dung_beetle = {
 			this.console.elements.input.css({'width':(width_after_divide-15)+'px'});
 		}
 	},
-	displayDom: function() {
-		
-	},
 	// Given an element in the body, highlight the respective element in the DOM view
 	highlightInDOMView: function(element) {
 		var node = this.tree.expandToElement(element[0]);
@@ -305,7 +302,7 @@ window.dung_beetle = {
 				tag_open.html(tag_open.html() + '&gt;');
 				tag_close.appendTo(papa);
 			} else {
-				tag_open.html(tag_open.html() + ' /&gt;');
+				tag_open.html(tag_open.html() + '/&gt;');
 			}
 		}
 	},
@@ -313,7 +310,6 @@ window.dung_beetle = {
 	inspectElement: function(mixed) {
 		var elem;
 		if(this.type(mixed) != 'element') {
-			mixed.stopPropagation();
 			elem = this.jq(mixed.target);
 		} else {
 			elem = this.jq(mixed);
@@ -537,7 +533,7 @@ window.dung_beetle = {
 						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
 				}
 			}
-			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? ' /' : '')+'&gt;');
+			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? '/' : '')+'&gt;');
 		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
@@ -830,7 +826,7 @@ window.dung_beetle = {
 			break;
 		}
 		this.console.mode = mode;
-		this.stick();
+		setTimeout(this.bind(this.stick, this), 100);
 	},
 	trapError: function(evt, url, linenumber) {
 		if(this.type(evt) == 'string') {
