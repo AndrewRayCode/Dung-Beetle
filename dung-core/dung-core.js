@@ -9,7 +9,7 @@
 
 window.dung_beetle = {
 	start: function() {
-		this.jq = jQuery.noConflict('EXTREMEZ!1!one');
+		this.jq = jQuery.noConflict(true);
 		this.jq('<link rel="stylesheet" id="dung_style_sheet" type="text/css" href="'+this.settings.css+'" />').appendTo('head');
 		if(document.domain.indexOf('www') > -1) {
 			document.domain = document.domain.replace(/$www\.?/, '');
@@ -93,9 +93,8 @@ window.dung_beetle = {
 			dung: this
 		}).parseTopLevel();
 
-		//TODO: Why don't browsers stick properly the first time?
-		setTimeout(this.bind(this.stick, this), 10);
 		this.initted = true;
+		this.stick();
 	},
 	toggleUpsize: function() {
 		if(this.console.mode == this.console.MODES.FULL) {
@@ -200,9 +199,10 @@ window.dung_beetle = {
 	},
 	stick: function() {
 		var scroll = {y: this.jq('body').scrollTop(), x:this.jq('body').scrollLeft()};
-		var w_size = {y: this.jq('body').height(), x: this.jq('body').width()};
+		var w_size = {y: this.jq(window).height(), x: this.jq(window).width()};
+		window.lol = this.elements.dung_beetle;
 
-		this.elements.dung_beetle.css({width:(parseInt(w_size.x))+'px', 'left':scroll.x+'px'});
+		this.elements.dung_beetle.css({width:(parseInt(w_size.x))+'px', left:scroll.x+'px', bottom:-scroll.y});
 		this.elements.tray.css({width:(parseInt(w_size.x))+'px', 'left':scroll.x+'px'});
 		var height = this.elements.dung_beetle.height();
 		this.elements.push.css('height', height+'px');
@@ -1179,7 +1179,6 @@ window.dung_beetle = {
 			};
 			this.history_position = 0;
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
-			console.log('Dung Beetle:', dung_beetle);
 		},
 		blog: function() {
 			this.addToConsole(arguments);
