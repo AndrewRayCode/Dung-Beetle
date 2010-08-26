@@ -5,7 +5,7 @@
 .dung_tip {background:#ddeeff; border:1px dashed #666; padding:3px; display:none; position:absolute;}
 
 /* DOM viewing styles */
-.dung_outline {background:#8888ff; position:absolute; top:0; left:0; width:2px; height:2px;}
+.dung_outline {background:#8888ff; position:absolute; top:0; left:0; width:2px; height:2px; line-height:0; font-size:0;}
 .dung_overlay, .dung_padding, .dung_margin {opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none; line-height:0; font-size:0;}
 .dung_overlay {background:#660033;}
 .dung_padding {background:#8822EE;}
@@ -63,8 +63,8 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_node {margin-left:20px; cursor:text;}
 .dung_tag_start, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
 .dung_tag_end {clear:both; margin-left:16px;}
-.dung_dom_selected.dung_tag_start, .dung_dom_selected.dung_tag_start span {background:#994372; color:#fff;}
-.dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; cursor:pointer;}
+.dung_dom_selected, .dung_dom_selected span {background:#994372; color:#fff;}
+.dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; _margin:4px 4px 0; cursor:pointer;}
 .dung_node_toggle.closed {background-position:0 -60px;}
 .dung_node {clear:both;}
 .dung_text_node {clear:both; margin:0 0 0 37px;}

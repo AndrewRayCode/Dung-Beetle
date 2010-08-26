@@ -200,7 +200,6 @@ window.dung_beetle = {
 	stick: function() {
 		var scroll = {y: this.jq('body').scrollTop(), x:this.jq('body').scrollLeft()};
 		var w_size = {y: this.jq(window).height(), x: this.jq(window).width()};
-		window.lol = this.elements.dung_beetle;
 
 		this.elements.dung_beetle.css({width:(parseInt(w_size.x))+'px', left:scroll.x+'px', bottom:-scroll.y});
 		this.elements.tray.css({width:(parseInt(w_size.x))+'px', 'left':scroll.x+'px'});
