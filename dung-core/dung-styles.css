@@ -38,7 +38,7 @@
 .dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -100px; border-bottom:1px solid #bbb; height:22px; position:absolute; top:3px; left:0; width:100%}
 .dung_header span {font-weight:bold; color:#660033; position:absolute; left:5px; top:3px; }
 .dung_header span a {font-weight:bold; color:#660033;}
-.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -100px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute;}
+.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -100px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute; overflow:hidden;}
 .dung_header .dung_inspect {padding:1px 0 0; left:50px; height:17px; !important; top:0; width:80px; border-color:#ccc #888 #777 #ccc;}
 .dung_header .dung_inspect.dung_active {color:#fff; background:#883355;}
 .dung_header .dung_tab.dung_console {left:190px;}
@@ -62,6 +62,7 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_html_attr {color:#000099; cursor:text;}
 .dung_node {margin-left:20px; cursor:text;}
 .dung_tag_start, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
+.dung_tag_start.empty {margin-left:17px;}
 .dung_tag_end {clear:both; margin-left:16px;}
 .dung_dom_selected, .dung_dom_selected span {background:#994372; color:#fff;}
 .dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; _margin:4px 4px 0; cursor:pointer;}
@@ -70,7 +71,7 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_text_node {clear:both; margin:0 0 0 37px;}
 
 /* Console display styles */
-.dung_beetle textarea {font-size:8.5pt; width:790px; height:15px; bottom:2px; left:12px; border:1px solid #aaa; margin:0; padding:0; position:absolute;font-family:Courier new, serif; }
+.dung_beetle textarea {font-size:8.5pt; width:790px; height:15px; bottom:2px; left:12px; border:1px solid #aaa; margin:0; padding:0; position:absolute;font-family:Courier new, serif;}
 .dung_cursor {width:10px; height:15px; bottom:2px; left:2px; color:#660033; border:1px solid #aaa; background:#fff; border-right:0 none; position:absolute; z-index:99999;}
 .dung_beetle .upsize {background:url(dung_sprite.gif) 0 -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
 .dung_beetle .upsize:hover {background-position:0 -60px;} 

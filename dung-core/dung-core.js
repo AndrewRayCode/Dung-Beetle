@@ -504,6 +504,9 @@ window.dung_beetle = {
 			this.dom_node = options.dom_node;
 			this.children = [];
 			this.tree = tree;
+			if(this.dom_node && !this.dom_node.innerHTML) {
+				this.empty = true;
+			}
 			var type = this.tree.dung.type(this.dom_node);
 			if(type == 'whitespace') {
 				return;
@@ -515,8 +518,14 @@ window.dung_beetle = {
 			}
 			this.tag_name = this.dom_node.nodeName.toLowerCase();
 			this.main = this.jq('<div></div>').addClass('dung_node').appendTo(options.papa.stroller);
-			this.toggle_btn = this.jq('<div></div>').addClass('dung_node_toggle closed').appendTo(this.main);
+			
+			if(!this.empty) {
+				this.toggle_btn = this.jq('<div></div>').addClass('dung_node_toggle closed').appendTo(this.main).click(tree.dung.bind(this.toggle, this));
+			}
 			this.tag_open = this.jq('<div></div>').addClass('dung_tag_start').text('<'+this.tag_name).appendTo(this.main);
+			if(this.empty) {
+				this.tag_open.addClass('empty');
+			}
 			this.dung_position = this.main.position().top - this.jq('body').scrollTop();
 
 			//text.hover_highlight = element.parentNode;
@@ -528,8 +537,7 @@ window.dung_beetle = {
 						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
 				}
 			}
-			this.tag_open.html(this.tag_open.html() + styles+'&gt;');
-			this.toggle_btn.click(tree.dung.bind(this.toggle, this));
+			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? ' /' : '')+'&gt;');
 		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
@@ -545,6 +553,9 @@ window.dung_beetle = {
 			}
 		};
 		this.node.prototype.setExpanded = function() {
+			if(this.empty) {
+				return;
+			}
 			this.toggle_btn.toggleClass('closed');
 			this.stroller = this.jq('<div></div>').addClass('dung_children').appendTo(this.main);
 			this.closeTag = this.jq('<div></div>').addClass('dung_tag_end').text('</'+this.tag_name+'>').appendTo(this.main);
@@ -1179,7 +1190,7 @@ window.dung_beetle = {
 			this.history_position = 0;
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 		},
-		blog: function() {
+		log: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
