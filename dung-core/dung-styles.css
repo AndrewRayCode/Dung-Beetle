@@ -38,14 +38,14 @@
 .dung_header {font-family:Trebuchet MS, sans-serif; background:#ddd url(dung_sprite.gif) repeat-x scroll 0 -100px; border-bottom:1px solid #bbb; height:22px; position:absolute; top:3px; left:0; width:100%}
 .dung_header span {font-weight:bold; color:#660033; position:absolute; left:5px; top:3px; }
 .dung_header span a {font-weight:bold; color:#660033;}
-.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -100px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute; overflow:hidden;}
-.dung_header .dung_inspect {padding:1px 0 0; left:50px; height:17px; !important; top:0; width:80px; border-color:#ccc #888 #777 #ccc;}
+.dung_header .dung_tab, .dung_inspect {background:#DDDDDD url(dung_sprite.gif) repeat-x scroll 0 -100px; outline:none; font-size:9pt; width:101px; text-align:center; height:19px; _height:23px; margin:0; padding:3px 0 0; border:1px solid #aaa; top:-1px; font-family:Trebuchet MS, sans-serif; cursor:pointer; position:absolute; overflow:hidden;}
+.dung_header .dung_inspect {padding:1px 0 0; left:50px; height:17px; !important; _height:20px; top:0; width:80px; border-color:#ccc #888 #777 #ccc;}
 .dung_header .dung_inspect.dung_active {color:#fff; background:#883355;}
 .dung_header .dung_tab.dung_console {left:190px;}
 .dung_header .dung_tab.dung_html {left:295px;}
 .dung_header .dung_tab.dung_dom {left:400px;}
 .dung_header .dung_tab:hover {background:#fff;}
-.dung_header .dung_tab.dung_active {background:#fff; color:#883355; border-bottom:1px solid #fff;}
+.dung_header .dung_tab.dung_active {background:#fff; color:#883355; border-bottom:1px solid #fff; _height:24px;}
 .dung_color_view {height:30px; width:30px; border:1px solid #888; display:none; position:absolute; z-index:9999;}
 div.dung_upsize:hover {cursor:pointer;}
 div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer;}
@@ -61,11 +61,11 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .dung_attr_edit {color:#660033; cursor:text;}
 .dung_html_attr {color:#000099; cursor:text;}
 .dung_node {margin-left:20px; cursor:text;}
-.dung_tag_start, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
-.dung_tag_start.empty {margin-left:17px;}
+.dung_tag_open, .dung_tag_end {color:#000099; cursor:pointer; float:left;}
+.dung_tag_open.empty {margin-left:17px;}
 .dung_tag_end {clear:both; margin-left:16px;}
 .dung_dom_selected, .dung_dom_selected span {background:#994372; color:#fff;}
-.dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; _margin:4px 4px 0; cursor:pointer;}
+.dung_node_toggle {background:url(dung_sprite.gif) no-repeat -10px -60px; float:left; width:9px; height:9px; margin:4px; _margin:4px 4px 0; _height:6px; cursor:pointer;}
 .dung_node_toggle.closed {background-position:0 -60px;}
 .dung_node {clear:both;}
 .dung_text_node {clear:both; margin:0 0 0 37px;}

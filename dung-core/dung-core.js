@@ -518,7 +518,7 @@ window.dung_beetle = {
 			if(!this.empty) {
 				this.toggle_btn = this.jq('<div></div>').addClass('dung_node_toggle closed').appendTo(this.main).click(tree.dung.bind(this.toggle, this));
 			}
-			this.tag_open = this.jq('<div></div>').addClass('dung_tag_start').text('<'+this.tag_name).appendTo(this.main);
+			this.tag_open = this.jq('<div></div>').addClass('dung_tag_open').text('<'+this.tag_name).appendTo(this.main);
 			if(this.empty) {
 				this.tag_open.addClass('empty');
 			}
@@ -1186,7 +1186,7 @@ window.dung_beetle = {
 			this.history_position = 0;
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 		},
-		log: function() {
+		og: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
