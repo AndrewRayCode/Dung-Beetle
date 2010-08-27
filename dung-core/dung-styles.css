@@ -1,12 +1,12 @@
 /* Dung Beetle styles */
-.dung_beetle {font-family:Courier new, serif; font-size:8.5pt; position:absolute; background:#eee !important; z-index:900; text-align:left;}
+.dung_beetle {font-family:Courier new, serif; font-size:8.5pt; position:absolute; background:#eee !important; z-index:16777271; text-align:left;}
 .dung_logo {background:transparent url(dung_sprite.gif) no-repeat scroll 0 -71px; cursor:pointer; height:29px; left:7px; opacity:0.9; position:absolute; top:-2px; width:33px; filter:alpha(opacity=90);}
 .dung_logo:hover {opacity:1; filter:alpha(opacity=100);}
 .dung_tip {background:#ddeeff; border:1px dashed #666; padding:3px; display:none; position:absolute;}
 
 /* DOM viewing styles */
 .dung_outline {background:#8888ff; position:absolute; top:0; left:0; width:2px; height:2px; line-height:0; font-size:0;}
-.dung_overlay, .dung_padding, .dung_margin {opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none; line-height:0; font-size:0;}
+.dung_overlay, .dung_padding, .dung_margin {opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none; line-height:0; font-size:0; z-index:16777270;}
 .dung_overlay {background:#660033;}
 .dung_padding {background:#8822EE;}
 .dung_margin {background:#99BBFF;}
@@ -96,4 +96,4 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 .console_buttons .dung_execute {left:3px;}
 .console_buttons .dung_clear {left:60px;}
 
-.dung_push {background:transparent; width:100px; height:160px; margin:0; padding:0}
+.dung_push {background:transparent; width:100px; height:160px; margin:0; padding:0; clear:both;}
