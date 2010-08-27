@@ -14,6 +14,12 @@ window.dung_beetle = {
 		if(document.domain.indexOf('www') > -1) {
 			document.domain = document.domain.replace(/$www\.?/, '');
 		}
+
+		var h = this.jq('<div></div>');
+		this.jq('html').clone().appendTo(h);
+		alert(h.html());
+		return;
+
 		this.setup();
 	},
 	setup: function() {
@@ -382,6 +388,7 @@ window.dung_beetle = {
 
 			} else {
 				var head = tree.dung.jq('head');
+				var body = tree.dung.jq('body');
 				if(head.length) {
 					tree.head = new tree.node({
 						jq: tree.jq,
@@ -389,11 +396,13 @@ window.dung_beetle = {
 						dom_node: head[0]
 					}).expand();
 				}
-				tree.body = new tree.node({
-					jq: tree.jq,
-					papa: tree,
-					dom_node: tree.dung.jq('body')[0]
-				}).expand();
+				if(body.length) {
+					tree.body = new tree.node({
+						jq: tree.jq,
+						papa: tree,
+						dom_node: body[0]
+					}).expand();
+				}
 			}
 			return this;
 		};
@@ -487,7 +496,11 @@ window.dung_beetle = {
 						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
 				}
 			}
+			
 			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? '/' : '')+'&gt;');
+			if(options.dom_node.nodeName.toLowerCase() == 'body') {
+				//alert(this.tag_open.html()); 
+			}
 		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
@@ -1144,7 +1157,7 @@ window.dung_beetle = {
 			this.history_position = 0;
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 		},
-		log: function() {
+		og: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
@@ -1655,20 +1668,29 @@ window.dung_beetle = {
 	// For example <div class="foo" style="bar"> returns
 	//	[ {nodeName:'class', nodeValue:'foo'}, {nodeName:'style', nodeClass:'bar'} ]
 	getElementAttributes: function(element) {
+		alert('1: '+(element ? element.nodeName : 'no'));
 		var attrs = [];
 		var hold = this.jq('<div></div>');
 		try {
-			element = this.jq(element).clone().text('').appendTo(hold);
+			element = this.jq(element).clone().html('').appendTo(hold);
 		} catch(e) {
+			alert('had an oopise: '+e);
 			hold.remove();
 			return attrs;
 		}
 
+		alert('2: '+(element[0] ? element[0].nodeName +hold.html(): '2no'));
 		var groups = hold.html().match(/([a-zA-Z0-9\-]+)=("[^">]+"[ >]|[^">]+[ >])/g);
+		if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
+			alert('hi');
+		}
 
 		if(groups != null && groups != false && groups.length) {
 			for(var x=0; x<groups.length; x++) {
 				var pair = groups[x].split('=');
+				if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
+					alert(pair[0] + " : " );
+				}
 				attrs[x] = {
 					'nodeName':pair[0],
 					'nodeValue':pair[1].replace(/"| $/g, '').replace('>', '')

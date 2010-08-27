@@ -6,7 +6,7 @@
 
 /* DOM viewing styles */
 .dung_outline {background:#8888ff; position:absolute; top:0; left:0; width:2px; height:2px; line-height:0; font-size:0;}
-.dung_overlay, .dung_padding, .dung_margin {opacity:.8; filter:alpha(opacity = 80); position:absolute; display:none; line-height:0; font-size:0; z-index:16777270;}
+.dung_overlay, .dung_padding, .dung_margin {opacity:.7; filter:alpha(opacity = 70); position:absolute; display:none; line-height:0; font-size:0; z-index:16777270;}
 .dung_overlay {background:#660033;}
 .dung_padding {background:#8822EE;}
 .dung_margin {background:#99BBFF;}
