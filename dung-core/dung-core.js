@@ -570,7 +570,6 @@ window.dung_beetle = {
 	// Show the margin and padding of an element
 	visualizeElement: function(elem) {
 		elem = this.jq(elem);
-		console.log(elem);
 		this.dungstatus.visualizing = true;
 		var pos = elem.offset();
 		var padding = {
@@ -580,8 +579,8 @@ window.dung_beetle = {
 			right: parseInt(elem.css('padding-right'))
 		};
 		var size = {
-			x:elem.width() - padding.left - padding.right,
-			y:elem.height() - padding.top - padding.bottom
+			x:elem.width(),
+			y:elem.height()
 		};
 		var margin = {
 			top: parseInt(elem.css('margin-top')),
