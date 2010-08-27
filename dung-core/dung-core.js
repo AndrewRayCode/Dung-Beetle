@@ -94,6 +94,7 @@ window.dung_beetle = {
 		}).parseTopLevel();
 
 		this.initted = true;
+		this.setMode(this.console.MODES.INSET, false);
 		this.stick();
 	},
 	toggleUpsize: function() {
@@ -155,16 +156,16 @@ window.dung_beetle = {
 		}
 
 		// Edit a CSS attribute or vlaue
+		var tc = clicked.parent().children('.dung_tag_start');
 		if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
 			this.editValue(clicked);
-		} else if( (clicked.hasClass('dung_tag_start') || clicked.hasClass('dung_tag_close')) && clicked.parent().children()[0] != this.current_dom_node) {
-			var clckd = this.jq(clckd.parent().children()[0]);
-			clckd.addClass('dung_dom_selected');
-			this.inspectElement(clckd[0].hover_highlight);
+		} else if((clicked.hasClass('dung_tag_start') || clicked.hasClass('dung_tag_end')) && tc != this.current_dom_node) {
+			this.inspectElement(tc[0].hover_highlight);
 			if(this.current_dom_node) {
 				this.current_dom_node.removeClass('dung_dom_selected');
 			}
-			this.current_dom_node = clckd;
+			this.current_dom_node = tc;
+			tc.addClass('dung_dom_selected');
 		} else if(clicked.hasClass('cancel')) {
 			this.toggleCSSStyle(this.jq(clicked.parent()));
 		} else if(clicked.attr('src') && clicked.attr('src').indexOf('cancel') > -1) {
@@ -743,8 +744,10 @@ window.dung_beetle = {
 		}
 		this.CSS = css;
 	},
-	setMode: function(mode) {
-		this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
+	setMode: function(mode, disable) {
+		if(disable !== false) {
+			this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
+		}
 		switch(mode) {
 			// Set to inline console on HTML page
 			case this.console.MODES.INSET:
@@ -752,8 +755,8 @@ window.dung_beetle = {
 				this.elements.cursor.css('display', 'block');
 				this.elements.display.css('display', 'block');
 				this.elements.styler.css('display', 'block');
-				this.console.elements.input.css({'width':'680px', 'left':'12px', 'height':'15px', 'bottom':'2px'});
-				this.console.elements.console.css({'width':'690px', 'height':'15px', 'bottom':'18px'});
+				this.console.elements.input.css({width:'680px', left:'12px', height:'15px', bottom:'2px', overflow:'hidden'});
+				this.console.elements.console.css({width:'690px', height:'15px', bottom:'18px', overflow:'hidden'});
 				this.elements.upsize.css('display', 'none');
 				this.console.elements.buttons.css('display', 'none');
 			break;
@@ -764,7 +767,7 @@ window.dung_beetle = {
 				this.elements.styler.css('display', 'none');
 				this.elements.cursor.css('display', 'block');
 				this.console.elements.input.css({width:(this.jq(window).width()-16)+'px', left:'2px', height:'15px', bottom:'2px'});
-				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px'});
+				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px', overflow:''});
 				this.elements.upsize.css({display:'block', bottom:'2px'}).attr('class', 'dung_toggle_btns upsize');
 				this.console.elements.buttons.css('display', 'none');
 			break;
@@ -774,8 +777,8 @@ window.dung_beetle = {
 				this.elements.display.css('display', 'none');
 				this.elements.styler.css('display', 'none');
 				this.elements.cursor.css('display', 'none');
-				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px'});
-				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px'});
+				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
+				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
 				this.elements.upsize.css({display:'block', bottom:'4px'}).set('class', 'dung_toggle_btns downsize');
 				this.console.elements.buttons.css('display', 'block');
 			break;
@@ -942,6 +945,7 @@ window.dung_beetle = {
 				.html('<span class="dung_execute">Execute</span><span class="dung_clear">Clear</span>')
 				.attr('class', 'buttons').appendTo(where);
 			this.elements.input = this.jq('<textarea></textarea>')
+				.addClass('dung_console_ta')
 				.appendTo(this.dung.elements.dung_beetle)
 				.keypress(this.dung.bind(this.keyEvent, this));
 
