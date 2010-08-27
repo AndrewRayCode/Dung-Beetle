@@ -14,6 +14,12 @@ window.dung_beetle = {
 		if(document.domain.indexOf('www') > -1) {
 			document.domain = document.domain.replace(/$www\.?/, '');
 		}
+
+		var h = this.jq('<div></div>');
+		this.jq('html').clone().appendTo(h);
+		alert(h.html());
+		return;
+
 		this.setup();
 	},
 	setup: function() {
@@ -41,13 +47,13 @@ window.dung_beetle = {
 			bottom: this.jq('<div></div>').attr('class', 'dung_outline').appendTo('body'),
 			left: this.jq('<div></div>').attr('class', 'dung_outline').appendTo('body')
 		};
-		this.elements.push = this.jq('<div></div>').attr('class', 'dung_push').appendTo('body');
 		this.elements.color_hover = this.jq('<div></div>').attr('class', 'dung_color_view').appendTo('body');
 
 		this.elements.dung_beetle = this.jq('<div></div>')
 			.attr('class', 'dung_beetle')
 			.css({'height':this.settings.default_height + 'px', 'width':this.jq(window).width()+'px', 'left':0})
 			.appendTo('body');
+		this.elements.push = this.jq('<div></div>').attr('class', 'dung_push').appendTo('body');
 
 		this.merge(this.elements, this.injectClassedDivsTo(
 			['resize', 'display', 'styler', 'header', 'cursor', 'upsize', 'vertical_divide', 'tray', 'logo', 'close', 'updown', 'windowed', 'inspect'],
@@ -94,6 +100,7 @@ window.dung_beetle = {
 		}).parseTopLevel();
 
 		this.initted = true;
+		this.setMode(this.console.MODES.INSET, false);
 		this.stick();
 	},
 	toggleUpsize: function() {
@@ -155,16 +162,16 @@ window.dung_beetle = {
 		}
 
 		// Edit a CSS attribute or vlaue
+		var tc = clicked.parent().children('.dung_tag_start');
 		if(clicked.hasClass('dung_attr') || clicked.hasClass('dung_val') || clicked.hasClass('dung_html_prop') || clicked.hasClass('dung_attr_edit')) {
 			this.editValue(clicked);
-		} else if( (clicked.hasClass('dung_tag_open') || clicked.hasClass('dung_tag_close')) && clicked.parent().children()[0] != this.current_dom_node) {
-			var clckd = this.jq(clckd.parent().children()[0]);
-			clckd.addClass('dung_dom_selected');
-			this.inspectElement(clckd[0].hover_highlight);
+		} else if((clicked.hasClass('dung_tag_start') || clicked.hasClass('dung_tag_end')) && tc != this.current_dom_node) {
+			this.inspectElement(tc[0].hover_highlight);
 			if(this.current_dom_node) {
 				this.current_dom_node.removeClass('dung_dom_selected');
 			}
-			this.current_dom_node = clckd;
+			this.current_dom_node = tc;
+			tc.addClass('dung_dom_selected');
 		} else if(clicked.hasClass('cancel')) {
 			this.toggleCSSStyle(this.jq(clicked.parent()));
 		} else if(clicked.attr('src') && clicked.attr('src').indexOf('cancel') > -1) {
@@ -255,54 +262,6 @@ window.dung_beetle = {
 					var find = this.findInDOMView(element, nodes[x]);
 					if(find) return this.jq(find);
 				}
-			}
-		}
-	},
-	// Display everything inside the body tag and highlight it
-	displayDOM: function(papa, element) {
-		if(!papa) {papa = this.elements.display[0]; this.elements.display.empty();}
-		element = element || this.jq('body')[0];
-		if(element.className) {
-			if(element.className.match('dung')) {
-				return;
-			}
-		}
-
-		if(this.type(element) == 'textnode') {
-			var text = this.jq('<span></span>').appendTo(papa);
-			text.html(element.nodeValue);
-			//text.hover_highlight = element.parentNode;
-		} else if(element.nodeName == '#text') {
-			this.jq(papa).remove();
-		} else {
-			var tag_open = this.jq('<div></div>').attr('class', 'dung_tag_open').text('<'+element.nodeName.toLowerCase()).appendTo(papa);
-			var tag_close = this.jq('<div></div>').attr('class', 'dung_tag_close').text('</'+element.nodeName.toLowerCase()+'>');
-			papa.hover_highlight = element;
-			//console.warn(papa, papa.hover_highlight);
-			tag_open[0].hover_highlight = element;
-			tag_open[0].dung_position = tag_open.position().top - this.jq('body').scrollTop();
-			tag_close[0].hover_highlight = element;
-
-			var attributes = this.getElementAttributes(element);
-			var styles = '';
-			if(attributes.length) {
-				for(var x=0; x<attributes.length; x++) {
-					styles += '<span class="dung_html_attr"> <span class="dung_html_prop">'+attributes[x].nodeName+'</span>="'
-						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
-				}
-			}
-			tag_open.html(tag_open.html() + styles);
-
-			var nodes = element.childNodes;
-			if(nodes.length) {
-				for(x=0; x<nodes.length; x++) {
-					var node = this.jq('<div></div>').attr('class', 'dung_node').appendTo(papa)[0];
-					this.displayDOM(node, nodes[x]);
-				}
-				tag_open.html(tag_open.html() + '&gt;');
-				tag_close.appendTo(papa);
-			} else {
-				tag_open.html(tag_open.html() + '/&gt;');
 			}
 		}
 	},
@@ -429,6 +388,7 @@ window.dung_beetle = {
 
 			} else {
 				var head = tree.dung.jq('head');
+				var body = tree.dung.jq('body');
 				if(head.length) {
 					tree.head = new tree.node({
 						jq: tree.jq,
@@ -436,11 +396,13 @@ window.dung_beetle = {
 						dom_node: head[0]
 					}).expand();
 				}
-				tree.body = new tree.node({
-					jq: tree.jq,
-					papa: tree,
-					dom_node: tree.dung.jq('body')[0]
-				}).expand();
+				if(body.length) {
+					tree.body = new tree.node({
+						jq: tree.jq,
+						papa: tree,
+						dom_node: body[0]
+					}).expand();
+				}
 			}
 			return this;
 		};
@@ -523,6 +485,7 @@ window.dung_beetle = {
 				this.tag_open.addClass('empty');
 			}
 			this.dung_position = this.main.position().top - this.jq('body').scrollTop();
+			this.tag_open[0].hover_highlight = options.dom_node;
 
 			//text.hover_highlight = element.parentNode;
 			var attributes = tree.dung.getElementAttributes(this.dom_node);
@@ -533,7 +496,11 @@ window.dung_beetle = {
 						+'<span class="dung_attr_edit">'+attributes[x].nodeValue+'</span><span class="dung_html_attr">"</span></span>';
 				}
 			}
+			
 			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? '/' : '')+'&gt;');
+			if(options.dom_node.nodeName.toLowerCase() == 'body') {
+				//alert(this.tag_open.html()); 
+			}
 		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
@@ -555,6 +522,7 @@ window.dung_beetle = {
 			this.toggle_btn.toggleClass('closed');
 			this.stroller = this.jq('<div></div>').addClass('dung_children').appendTo(this.main);
 			this.closeTag = this.jq('<div></div>').addClass('dung_tag_end').text('</'+this.tag_name+'>').appendTo(this.main);
+			this.closeTag[0].hover_highlight = this.tag_open[0].hover_highlight;
 			this.expanded = true;
 		};
 		this.node.prototype.expand = function(depth) {
@@ -600,7 +568,7 @@ window.dung_beetle = {
 		this.elements.outlines.bottom.remove();
 		this.elements.outlines.right.remove();
 		this.elements.outlines.left.remove();
-		this.elements.dung_push.remove();
+		this.elements.push.remove();
 	},
 	toggleUpDown: function() {
 		alert('down boy!');
@@ -615,6 +583,7 @@ window.dung_beetle = {
 	},
 	// Show the margin and padding of an element
 	visualizeElement: function(elem) {
+		elem = this.jq(elem);
 		this.dungstatus.visualizing = true;
 		var pos = elem.offset();
 		var padding = {
@@ -624,26 +593,26 @@ window.dung_beetle = {
 			right: parseInt(elem.css('padding-right'))
 		};
 		var size = {
-			x:elem.width() - padding.left - padding.right,
-			y:elem.height() - padding.top - padding.bottom
+			x:elem.width(),
+			y:elem.height()
 		};
 		var margin = {
-			top: parseInt(elem.css('margin-top').toInt()),
-			left: parseInt(elem.css('margin-left').toInt()),
-			bottom: parseInt(elem.css('margin-bottom').toInt()),
-			right: parseInt(elem.css('margin-right').toInt())
+			top: parseInt(elem.css('margin-top')),
+			left: parseInt(elem.css('margin-left')),
+			bottom: parseInt(elem.css('margin-bottom')),
+			right: parseInt(elem.css('margin-right'))
 		};
 
-		this.elements.overlay.css({'display':'block', 'left':(pos.left+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':size.x+'px', 'height':size.y+'px'});
-		this.elements.padding.top.css({'display':'block', 'left':pos.left+'px', 'top':pos.top+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.top)+'px'});
-		this.elements.padding.left.css({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
-		this.elements.padding.bottom.css({'display':'block', 'left':pos.left+'px', 'top':(pos.top+padding.top+size.y)+'px', 'width':(padding.left+padding.right+size.x)+'px', 'height':(padding.bottom)+'px'});
-		this.elements.padding.right.css({'display':'block', 'left':(pos.left+size.x+padding.left)+'px', 'top':(pos.top+padding.top)+'px', 'width':(padding.left)+'px', 'height':(size.y)+'px'});
+		this.elements.overlay.css({display:'block', left:(pos.left+padding.left), top:(pos.top+padding.top), width:size.x, height:size.y});
+		this.elements.padding.top.css({display:'block', left:pos.left+'px', top:pos.top+'px', width:(padding.left+padding.right+size.x)+'px', height:(padding.top)+'px'});
+		this.elements.padding.left.css({display:'block', left:pos.left+'px', top:(pos.top+padding.top)+'px', width:(padding.left)+'px', height:(size.y)+'px'});
+		this.elements.padding.bottom.css({display:'block', left:pos.left+'px', top:(pos.top+padding.top+size.y)+'px', width:(padding.left+padding.right+size.x)+'px', height:(padding.bottom)+'px'});
+		this.elements.padding.right.css({display:'block', left:(pos.left+size.x+padding.left)+'px', top:(pos.top+padding.top)+'px', width:(padding.left)+'px', height:(size.y)+'px'});
 
-		this.elements.margin.top.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top-margin.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.top)+'px'});
-		this.elements.margin.left.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top)+'px', 'width':(margin.left)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
-		this.elements.margin.bottom.css({'display':'block', 'left':(pos.left-margin.left)+'px', 'top':(pos.top+size.y+padding.bottom+padding.top)+'px', 'width':(padding.left+padding.right+size.x+margin.left+margin.right)+'px', 'height':(margin.bottom)+'px'});
-		this.elements.margin.right.css({'display':'block', 'left':(pos.left+size.x+padding.left+padding.right)+'px', 'top':(pos.top)+'px', 'width':(margin.right)+'px', 'height':(size.y+padding.top+padding.bottom)+'px'});
+		this.elements.margin.top.css({display:'block', left:(pos.left-margin.left)+'px', top:(pos.top-margin.top)+'px', width:(padding.left+padding.right+size.x+margin.left+margin.right)+'px', height:(margin.top)+'px'});
+		this.elements.margin.left.css({display:'block', left:(pos.left-margin.left)+'px', top:(pos.top)+'px', width:(margin.left)+'px', height:(size.y+padding.top+padding.bottom)+'px'});
+		this.elements.margin.bottom.css({display:'block', left:(pos.left-margin.left)+'px', top:(pos.top+size.y+padding.bottom+padding.top)+'px', width:(padding.left+padding.right+size.x+margin.left+margin.right)+'px', height:(margin.bottom)+'px'});
+		this.elements.margin.right.css({display:'block', left:(pos.left+size.x+padding.left+padding.right)+'px', top:(pos.top)+'px', width:(margin.right)+'px', height:(size.y+padding.top+padding.bottom)+'px'});
 	},
 	hideElementVisuals: function() {
 		this.dungstatus.visualizing = false;
@@ -697,9 +666,10 @@ window.dung_beetle = {
 	},
 	// Handles hovering over body elements
 	bodyHoverEvent: function(evt) {
-		if(this.dungstatus.realtime_inspect && !/dung/.test(evt.target.className) && !this.jq(evt.target).parents().hasClass('dung_beetle') && evt.target != document.body) {
+		var hc = this.jq(evt.target).parents().hasClass('dung_beetle');
+		if(this.dungstatus.realtime_inspect && !/dung/.test(evt.target.className) && !hc && evt.target != document.body) {
 			this.outlineElement(evt);
-		} else if(this.dungstatus.visualizing) {
+		} else if(this.dungstatus.visualizing && !hc) {
 			this.hideElementVisuals();
 		}
 	},
@@ -715,7 +685,6 @@ window.dung_beetle = {
 		}
 
 		if(this.current_element && evt.target != this.current_element[0]) {
-			console.log('stopping ?',evt);
 			evt.stopPropagation();
 			if(!evt.target.className || !/dung/.test(evt.target.className)) {
 				this.inspectElement(evt);
@@ -788,8 +757,10 @@ window.dung_beetle = {
 		}
 		this.CSS = css;
 	},
-	setMode: function(mode) {
-		this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
+	setMode: function(mode, disable) {
+		if(disable !== false) {
+			this.elements.dung_beetle.find('.dung_tab').removeClass('dung_active');
+		}
 		switch(mode) {
 			// Set to inline console on HTML page
 			case this.console.MODES.INSET:
@@ -797,8 +768,8 @@ window.dung_beetle = {
 				this.elements.cursor.css('display', 'block');
 				this.elements.display.css('display', 'block');
 				this.elements.styler.css('display', 'block');
-				this.console.elements.input.css({'width':'680px', 'left':'12px', 'height':'15px', 'bottom':'2px'});
-				this.console.elements.console.css({'width':'690px', 'height':'15px', 'bottom':'18px'});
+				this.console.elements.input.css({width:'680px', left:'12px', height:'15px', bottom:'2px', overflow:'hidden'});
+				this.console.elements.console.css({width:'690px', height:'15px', bottom:'18px', overflow:'hidden'});
 				this.elements.upsize.css('display', 'none');
 				this.console.elements.buttons.css('display', 'none');
 			break;
@@ -809,7 +780,7 @@ window.dung_beetle = {
 				this.elements.styler.css('display', 'none');
 				this.elements.cursor.css('display', 'block');
 				this.console.elements.input.css({width:(this.jq(window).width()-16)+'px', left:'2px', height:'15px', bottom:'2px'});
-				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px'});
+				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px', overflow:''});
 				this.elements.upsize.css({display:'block', bottom:'2px'}).attr('class', 'dung_toggle_btns upsize');
 				this.console.elements.buttons.css('display', 'none');
 			break;
@@ -819,8 +790,8 @@ window.dung_beetle = {
 				this.elements.display.css('display', 'none');
 				this.elements.styler.css('display', 'none');
 				this.elements.cursor.css('display', 'none');
-				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px'});
-				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px'});
+				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
+				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
 				this.elements.upsize.css({display:'block', bottom:'4px'}).set('class', 'dung_toggle_btns downsize');
 				this.console.elements.buttons.css('display', 'block');
 			break;
@@ -886,7 +857,6 @@ window.dung_beetle = {
 			var rule = (first.length && first[0].nodeName.toLowerCase() == 'input') ? first.val() : css.html();
 			str += selector+': '+rule+'; ';
 		}
-		console.log(this.stripTags(this.trim(str)));
 		return this.stripTags(this.trim(str));
 	},
 	addCSSRule: function(selector, attributes) {
@@ -988,6 +958,7 @@ window.dung_beetle = {
 				.html('<span class="dung_execute">Execute</span><span class="dung_clear">Clear</span>')
 				.attr('class', 'buttons').appendTo(where);
 			this.elements.input = this.jq('<textarea></textarea>')
+				.addClass('dung_console_ta')
 				.appendTo(this.dung.elements.dung_beetle)
 				.keypress(this.dung.bind(this.keyEvent, this));
 
@@ -1505,7 +1476,7 @@ window.dung_beetle = {
 	hoverHandler: function(evt) {
 		var elem = this.jq(evt.target);
 		var highlight = elem[0].hover_highlight;
-		if(highlight && elem.hasClass('dung_tag_open')) {
+		if(highlight && (elem.hasClass('dung_tag_start') || elem.hasClass('dung_tag_end'))) {
 			this.visualizeElement(highlight);
 		} else if(this.dungstatus.visualizing) {
 			this.hideElementVisuals();
@@ -1697,20 +1668,29 @@ window.dung_beetle = {
 	// For example <div class="foo" style="bar"> returns
 	//	[ {nodeName:'class', nodeValue:'foo'}, {nodeName:'style', nodeClass:'bar'} ]
 	getElementAttributes: function(element) {
+		alert('1: '+(element ? element.nodeName : 'no'));
 		var attrs = [];
 		var hold = this.jq('<div></div>');
 		try {
-			element = this.jq(element).clone().text('').appendTo(hold);
+			element = this.jq(element).clone().html('').appendTo(hold);
 		} catch(e) {
+			alert('had an oopise: '+e);
 			hold.remove();
 			return attrs;
 		}
 
+		alert('2: '+(element[0] ? element[0].nodeName +hold.html(): '2no'));
 		var groups = hold.html().match(/([a-zA-Z0-9\-]+)=("[^">]+"[ >]|[^">]+[ >])/g);
+		if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
+			alert('hi');
+		}
 
 		if(groups != null && groups != false && groups.length) {
 			for(var x=0; x<groups.length; x++) {
 				var pair = groups[x].split('=');
+				if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
+					alert(pair[0] + " : " );
+				}
 				attrs[x] = {
 					'nodeName':pair[0],
 					'nodeValue':pair[1].replace(/"| $/g, '').replace('>', '')
