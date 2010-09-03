@@ -14,18 +14,12 @@ window.dung_beetle = {
 		if(document.domain.indexOf('www') > -1) {
 			document.domain = document.domain.replace(/$www\.?/, '');
 		}
-
-		var h = this.jq('<div></div>');
-		this.jq('html').clone().appendTo(h);
-		alert(h.html());
-		return;
-
 		this.setup();
 	},
 	setup: function() {
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
 		var me = this;
-		//window.onerror = this.bind(this.trapError, this);
+		window.onerror = this.bind(this.trapError, this);
 		//this.jq(window).bind('error', this.bind(this.trapError, this));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
@@ -387,31 +381,20 @@ window.dung_beetle = {
 			if(element) {
 
 			} else {
-				var head = tree.dung.jq('head');
-				var body = tree.dung.jq('body');
-				if(head.length) {
-					tree.head = new tree.node({
+				var html = tree.dung.jq('html');
+				if(html.length) {
+					tree.html = new tree.node({
 						jq: tree.jq,
 						papa: tree,
-						dom_node: head[0]
-					}).expand();
-				}
-				if(body.length) {
-					tree.body = new tree.node({
-						jq: tree.jq,
-						papa: tree,
-						dom_node: body[0]
+						dom_node: tree.dung.jq('html')[0]
 					}).expand();
 				}
 			}
 			return this;
 		};
 		this.expandToElement = function(element, papa) {
-			for(var x=0, l=tree.head.children.length; x<l; x++) {
-				tree.head.children[x].collapse();
-			}
-			for(var x=0, l=tree.body.children.length; x<l; x++) {
-				tree.body.children[x].collapse();
+			for(var x=0, l=tree.html.children.length; x<l; x++) {
+				tree.html.children[x].collapse();
 			}
 			var findme = element;
 			var path = [findme];
@@ -420,9 +403,9 @@ window.dung_beetle = {
 			while(searching) {
 				findme = findme.parentNode;
 				path.push(findme);
-				for(var x=0, l=tree.body.children.length; x<l; x++) {
-					if(findme == tree.body.children[x].dom_node) {
-						found = tree.body.children[x];
+				for(var x=0, l=tree.html.children.length; x<l; x++) {
+					if(findme == tree.html.children[x].dom_node) {
+						found = tree.html.children[x];
 						searching = false;
 						break;
 					}
@@ -498,9 +481,6 @@ window.dung_beetle = {
 			}
 			
 			this.tag_open.html(this.tag_open.html() + styles+(this.empty ? '/' : '')+'&gt;');
-			if(options.dom_node.nodeName.toLowerCase() == 'body') {
-				//alert(this.tag_open.html()); 
-			}
 		};
 		this.node.prototype.addChild = function(child) {
 			if(!this.expanded) {
@@ -803,16 +783,9 @@ window.dung_beetle = {
 		if(this.type(evt) == 'string') {
 			 // Window onerror
 			this.lasterrordata = {msg: evt, url: url, line: linenumber};
-		} else {
-			console.error(); return;
-			// JQuery error event
-			if(this.lasterrordata) {
-				console.error(this.lasterrordata.msg, this.lasterrordata.url, ', on line: ',this.lasterrordata.line);
-			} else {
-				console.error('ERROR !', evt);
-			}
-			evt.stopImmediatePropagation();
 		}
+		console.error(this.lasterrordata.msg, this.lasterrordata.url, ', on line: ',this.lasterrordata.line);
+
 		if(this.settings.trap_errors) {
 			return true;
 		}
@@ -1046,7 +1019,7 @@ window.dung_beetle = {
 					while (curr && stack.length < maxStackSize) {
 						fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
 						args = Array.prototype.slice.call(curr['arguments']);
-						stack[j++] = fn + '(' + printStackTrace.implementation.prototype.stringifyArguments(args) + ')';
+						stack[j++] = fn + '(' + this.stringifyArguments(args) + ')';
 						
 						//Opera bug: if curr.caller does not exist, Opera returns curr (WTF)
 						if (curr === curr.caller && window.opera) {
@@ -1157,7 +1130,7 @@ window.dung_beetle = {
 			this.history_position = 0;
 			this.history = ["console.log('Dung Beetle:',dung_beetle);"];
 		},
-		og: function() {
+		log: function() {
 			this.addToConsole(arguments);
 		},
 		error: function() {
@@ -1536,7 +1509,7 @@ window.dung_beetle = {
 		//css: 'http://andrewray.me/dung-beetle/secret/dung-styles.css',
 		css: 'http://localhost:8080/dung-beetle/dung-core/dung-styles.css',
 		default_height: 180,
-		trap_errors: false,
+		trap_errors: true,
 		tab_width: 105,
 		tab_offset: 140,
 		inspect_delay: 300,
@@ -1667,33 +1640,38 @@ window.dung_beetle = {
 	// Get an array of all attributes of a DOM node
 	// For example <div class="foo" style="bar"> returns
 	//	[ {nodeName:'class', nodeValue:'foo'}, {nodeName:'style', nodeClass:'bar'} ]
-	getElementAttributes: function(element) {
-		alert('1: '+(element ? element.nodeName : 'no'));
+	getElementAttributes: function(element, showAll) {
 		var attrs = [];
+
+		if('htmlbodyhead'.indexOf(element.tagName.toLowerCase()) > -1) {
+			var t, as = element.attributes;
+			for(var x=0, l=as.length; x<l; x++) {
+				t = as[x].nodeValue; 
+				if(showAll == true || (t!== '' && t!== null && t!== false && t!== 'inherit' && t!== 0)) {
+					attrs[attrs.length] = {
+						nodeName:as[x].nodeName,
+						nodeValue:as[x].nodeValue
+					};
+				}
+			}
+			return attrs;
+		}
+
 		var hold = this.jq('<div></div>');
 		try {
 			element = this.jq(element).clone().html('').appendTo(hold);
 		} catch(e) {
-			alert('had an oopise: '+e);
 			hold.remove();
 			return attrs;
 		}
 
-		alert('2: '+(element[0] ? element[0].nodeName +hold.html(): '2no'));
 		var groups = hold.html().match(/([a-zA-Z0-9\-]+)=("[^">]+"[ >]|[^">]+[ >])/g);
-		if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
-			alert('hi');
-		}
-
 		if(groups != null && groups != false && groups.length) {
 			for(var x=0; x<groups.length; x++) {
 				var pair = groups[x].split('=');
-				if(this.jq(element).hasClass('LOLOL') || this.jq(element).attr('id') == 'haha'  || (element[0] && element[0].nodeName && element[0].nodeName.toLowerCase() == 'body')) {
-					alert(pair[0] + " : " );
-				}
 				attrs[x] = {
-					'nodeName':pair[0],
-					'nodeValue':pair[1].replace(/"| $/g, '').replace('>', '')
+					nodeName:pair[0],
+					nodeValue:pair[1].replace(/"| $/g, '').replace('>', '')
 				};
 			}
 		}
