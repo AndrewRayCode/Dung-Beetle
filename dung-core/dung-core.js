@@ -19,8 +19,9 @@ window.dung_beetle = {
 	setup: function() {
 		this.jq(document).bind('mousemove', this.bind(this.mouseCapture, this));
 		var me = this;
+		// Only supported by FireFox and IE, not Webit or Opera
 		window.onerror = this.bind(this.trapError, this);
-		//this.jq(window).bind('error', this.bind(this.trapError, this));
+		this.jq(window).bind('error', this.bind(this.console.printStackTrace, this.console));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
@@ -777,13 +778,13 @@ window.dung_beetle = {
 			break;
 		}
 		this.console.mode = mode;
-		this.dung.toBottom(this.elements.console);
+		this.toBottom(console.elements.console);
 		setTimeout(this.bind(this.stick, this), 100);
 	},
 	trapError: function(evt, url, linenumber) {
 		this.lasterrordata = {msg: evt, url: url, line: linenumber};
 		console.error(this.lasterrordata.msg+': '+this.lasterrordata.url+' on line: '+this.lasterrordata.line);
-		console.logStackTrace(console.printStackTrace());
+		console.printStackTrace();
 
 		if(this.settings.trap_errors) {
 			return true;
@@ -940,7 +941,7 @@ window.dung_beetle = {
 				try {
 					this.dung.merge(console, this);
 				} catch(e) {
-					console.warn('Warning, cannot overwrite console methods, Dung Beetle MAY explode and eat your family');
+					console.warn('Warning: cannot overwrite console methods, Dung Beetle MAY explode and eat your family.');
 				}
 			}
 
@@ -988,10 +989,19 @@ window.dung_beetle = {
 							split("\n");
 				},
 				firefox: function(e) {
+					alert(e.stack);
+					var s = [], stack = e.stack.split('\n');
+					var l = stack.length;
+					while(l--) {
+						stack[l] = {func:stack[l], args:['hi']};
+					}
+/*
 					return e.stack.replace(/^.*?\n/, '').
 							replace(/(?:\n@:0)?\s+$/m, '').
 							replace(/^\(/gm, '{anonymous}(').
 							split("\n");
+							*/
+					return stack;
 				},
 				// Opera 7.x and 8.x only!
 				opera: function(e) {
@@ -1012,6 +1022,7 @@ window.dung_beetle = {
 				// Safari, Opera 9+, IE, and others
 				other: function(curr) {
 					var fnRE = /function\s*([\w\-$]+)?\s*\([^)]*?\)/i, stack = [], j = 0, fn, args;
+					stack = stack.slice(4);
 					
 					while (curr && stack.length < dung_beetle.settings.max_stack_size) {
 						stack[j++] = {func:curr.toString().match(fnRE)[0], args:Array.prototype.slice.call(curr.arguments)};
@@ -1148,7 +1159,6 @@ window.dung_beetle = {
 		},
 		logStackTrace: function(stack) {
 			var fmt = [];
-			stack = stack.slice(4);
 			for(var x=0, l=stack.length; x<l; x++) {
 				fmt.push('<div class="dung_sl"><div class="dung_sf">'+stack[x].func+'</div> <div class="dung_args">'+this.formatObject(stack[x].args)+'</div></div>');
 			}
@@ -1210,12 +1220,12 @@ window.dung_beetle = {
 			var kids = this.elements.console.size();
 			try {
 				var res = eval(this.elements.input.val());
-				this.log(res);
+				console.log(res);
 			} catch(e) {
 				exerr = e;
 			}
 			if(!res && this.elements.console.size() == kids) {
-				this.log('Evaluated: '+this.elements.input.val());
+				console.log('Evaluated: '+this.elements.input.val());
 			}
 			return exerr;
 		},
@@ -1263,11 +1273,14 @@ window.dung_beetle = {
 		// See licenses.txt or http://github.com/emwendelin/javascript-stacktrace for license information. Removed from source for brevity
 		printStackTrace: function(options) {
 			var ex = (options && options.e) ? options.e : null;
+			if(options && options.stack) {
+				ex = options;
+			}
 			var guess = (options && options.guess) ? options.guess : false;
 			
 			var p = new this.printStackTrace.implementation();
 			var result = p.run(ex);
-			return (guess) ? p.guessFunctions(result) : result;
+			console.logStackTrace((guess) ? p.guessFunctions(result) : result);
 		},
 		MODES: {
 			INSET: 1,		// Inset one-line
