@@ -45,7 +45,7 @@ window.dung_beetle = {
 
 		this.elements.dung_beetle = this.jq('<div></div>')
 			.attr('class', 'dung_beetle')
-			.css({'height':this.settings.default_height + 'px', 'width':this.jq(window).width()+'px', 'left':0})
+			.css({height:this.settings.default_height + 'px', width:this.jq(window).width()+'px', left:0})
 			.appendTo('body');
 		this.elements.push = this.jq('<div></div>').attr('class', 'dung_push').appendTo('body');
 
@@ -203,7 +203,7 @@ window.dung_beetle = {
 		var w_size = {y: this.jq(window).height(), x: this.jq(window).width()};
 
 		this.elements.dung_beetle.css({width:(parseInt(w_size.x))+'px', left:scroll.x+'px', bottom:-scroll.y});
-		this.elements.tray.css({width:(parseInt(w_size.x))+'px', 'left':scroll.x+'px'});
+		this.elements.tray.css({width:(parseInt(w_size.x))+'px', left:scroll.x+'px'});
 		var height = this.elements.dung_beetle.height();
 		this.elements.push.css('height', height+'px');
 
@@ -217,18 +217,18 @@ window.dung_beetle = {
 
 		if(this.console.mode == this.console.MODES.INSET) {
 			this.elements.vertical_divide.css('height', Math.max(height-28, 0)+'px');
-			this.elements.styler.css({'width':width_after_divide+'px', 'left':(v_pos+3)+'px', 'height':Math.max(height-55, 0)+'px'});
-			this.elements.display.css({'width':width_before_divide+'px', 'height':Math.max(height-87, 0)+'px'});
+			this.elements.styler.css({width:width_after_divide+'px', left:(v_pos+3)+'px', height:Math.max(height-55, 0)+'px'});
+			this.elements.display.css({width:width_before_divide+'px', height:Math.max(height-87, 0)+'px'});
 			this.console.elements.input.css('width', (width_before_divide-10)+'px');
 			this.console.elements.console.css('width', width_before_divide+'px');
 		} else if(this.console.mode == this.console.MODES.FULL) {
-			this.console.elements.input.css({'width':(parseInt(w_size.x)-16)+'px', 'left':'12px'});
-			this.console.elements.console.css({'width':(parseInt(w_size.x)-6)+'px', 'height':Math.max(height-71, 0)+'px'});
+			this.console.elements.input.css({width:(parseInt(w_size.x)-16)+'px', left:'12px'});
+			this.console.elements.console.css({width:(parseInt(w_size.x)-6)+'px', height:Math.max(height-71, 0)+'px'});
 		} else if(this.console.mode == this.console.MODES.FULL_MULTI) {
 			this.elements.vertical_divide.css('height', Math.max(height-28, 0)+'px');
-			this.console.elements.input.css({'height': Math.max(height-48, 0)+'px', 'width':(width_after_divide+1)+'px', 'left':(v_pos+3)+'px'});
-			this.console.elements.console.css({'height':Math.max(height-30, 0)+'px', 'width':width_before_divide+'px'});
-			this.console.elements.input.css({'width':(width_after_divide-15)+'px'});
+			this.console.elements.input.css({height: Math.max(height-48, 0)+'px', width:(width_after_divide+1)+'px', left:(v_pos+3)+'px'});
+			this.console.elements.console.css({height:Math.max(height-30, 0)+'px', width:width_before_divide+'px'});
+			this.console.elements.input.css({width:(width_after_divide-15)+'px'});
 		}
 	},
 	// Given an element in the body, highlight the respective element in the DOM view
@@ -633,10 +633,10 @@ window.dung_beetle = {
 			var pos = elem.offset();
 			var size = {x: elem.outerWidth(), y: elem.outerHeight()};
 
-			this.elements.outlines.top.css({'top':pos.top, 'left':pos.left, 'width':size.x});
-			this.elements.outlines.bottom.css({'top':pos.top+size.y, 'left':pos.left, 'width':(parseInt(size.x)+2)+'px'});
-			this.elements.outlines.right.css({'top':pos.top, 'left':pos.left+size.x, 'height':size.y});
-			this.elements.outlines.left.css({'top':pos.top, 'left':pos.left, 'height':size.y});
+			this.elements.outlines.top.css({top:pos.top, left:pos.left, width:size.x});
+			this.elements.outlines.bottom.css({top:pos.top+size.y, left:pos.left, width:(parseInt(size.x)+2)+'px'});
+			this.elements.outlines.right.css({top:pos.top, left:pos.left+size.x, height:size.y});
+			this.elements.outlines.left.css({top:pos.top, left:pos.left, height:size.y});
 		}
 	},
 	hideOutlines: function() {
@@ -748,7 +748,7 @@ window.dung_beetle = {
 				this.elements.cursor.css('display', 'block');
 				this.elements.display.css('display', 'block');
 				this.elements.styler.css('display', 'block');
-				this.console.elements.input.css({width:'680px', left:'12px', height:'15px', bottom:'2px', overflow:'hidden'});
+				this.console.elements.input.css({width:'680px', left:'11px', height:'17px', bottom:'2px', overflow:'hidden'});
 				this.console.elements.console.css({width:'690px', height:'15px', bottom:'18px', overflow:'hidden'});
 				this.elements.upsize.css('display', 'none');
 				this.console.elements.buttons.css('display', 'none');
@@ -759,9 +759,9 @@ window.dung_beetle = {
 				this.elements.display.css('display', 'none');
 				this.elements.styler.css('display', 'none');
 				this.elements.cursor.css('display', 'block');
-				this.console.elements.input.css({width:(this.jq(window).width()-16)+'px', left:'2px', height:'15px', bottom:'2px'});
+				this.console.elements.input.css({width:(this.jq(window).width()-16)+'px', left:'1px', height:'17px', bottom:'2px'});
 				this.console.elements.console.css({bottom:'18px', width:(this.jq(window).width()-16)+'px', height:(this.elements.dung_beetle.height()-46)+'px', overflow:''});
-				this.elements.upsize.css({display:'block', bottom:'2px'}).attr('class', 'dung_toggle_btns upsize');
+				this.elements.upsize.css({display:'block', bottom:'2px'}).attr('class', 'dung_toggle_btns dung_upsize');
 				this.console.elements.buttons.css('display', 'none');
 			break;
 			// Set to full console with multiline input
@@ -772,19 +772,18 @@ window.dung_beetle = {
 				this.elements.cursor.css('display', 'none');
 				this.console.elements.input.css({bottom:'25px', left:(this.jq(window).width()-204)+'px', width:'200px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
 				this.console.elements.console.css({bottom:'2px', width:(this.jq(window).width()-210)+'px', height:(this.elements.dung_beetle.height()-30)+'px', overflow:''});
-				this.elements.upsize.css({display:'block', bottom:'4px'}).set('class', 'dung_toggle_btns downsize');
+				this.elements.upsize.css({display:'block', bottom:'4px'}).set('class', 'dung_toggle_btns dung_downsize');
 				this.console.elements.buttons.css('display', 'block');
 			break;
 		}
 		this.console.mode = mode;
+		this.dung.toBottom(this.elements.console);
 		setTimeout(this.bind(this.stick, this), 100);
 	},
 	trapError: function(evt, url, linenumber) {
-		if(this.type(evt) == 'string') {
-			 // Window onerror
-			this.lasterrordata = {msg: evt, url: url, line: linenumber};
-		}
-		console.error(this.lasterrordata.msg, this.lasterrordata.url, ', on line: ',this.lasterrordata.line);
+		this.lasterrordata = {msg: evt, url: url, line: linenumber};
+		console.error(this.lasterrordata.msg+': '+this.lasterrordata.url+' on line: '+this.lasterrordata.line);
+		console.logStackTrace(console.printStackTrace());
 
 		if(this.settings.trap_errors) {
 			return true;
@@ -948,8 +947,7 @@ window.dung_beetle = {
 			this.printStackTrace.implementation = function() {};
 			this.printStackTrace.implementation.prototype = {
 				run: function(ex) {
-					// Use either the stored mode, or resolve it
-					var mode = this._mode || this.mode();
+					var mode = this.mode();
 					if (mode === 'other') {
 						return this.other(arguments.callee);
 					} else {
@@ -1013,20 +1011,29 @@ window.dung_beetle = {
 				},
 				// Safari, Opera 9+, IE, and others
 				other: function(curr) {
-					var ANON = "{anonymous}", fnRE = /function\s*([\w\-$]+)?\s*\(/i, stack = [], j = 0, fn, args;
+					var fnRE = /function\s*([\w\-$]+)?\s*\([^)]*?\)/i, stack = [], j = 0, fn, args;
 					
-					var maxStackSize = 10;
-					while (curr && stack.length < maxStackSize) {
-						fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
+					while (curr && stack.length < dung_beetle.settings.max_stack_size) {
+						stack[j++] = {func:curr.toString().match(fnRE)[0], args:Array.prototype.slice.call(curr.arguments)};
+						if (curr === curr.caller && window.opera) {
+							//TODO: check for same arguments if possible
+							break;
+						}
+						curr = curr.caller;
+
+
+
+
+						/*fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
 						args = Array.prototype.slice.call(curr['arguments']);
-						stack[j++] = fn + '(' + this.stringifyArguments(args) + ')';
+						stack[j++] = fn + '(' + console.formatObject(args) + ')';
 						
 						//Opera bug: if curr.caller does not exist, Opera returns curr (WTF)
 						if (curr === curr.caller && window.opera) {
 							//TODO: check for same arguments if possible
 							break;
 						}
-						curr = curr.caller;
+						*/
 					}
 					return stack;
 				},
@@ -1134,18 +1141,29 @@ window.dung_beetle = {
 			this.addToConsole(arguments);
 		},
 		error: function() {
-			//this.addToConsole(this.printStackTrace(), 'dung_error');
-			console.warn(this.printStackTrace());
+			this.addToConsole(arguments, 'dung_error');
 		},
 		warn: function() {
 			this.addToConsole(arguments, 'dung_warn');
 		},
-		addToConsole: function(args, wrapclass) {
-			var str = '';
-			for(var x=0, l=args.length; x<l; x++) {
-				str += this.formatObject(args[x])+' ';
+		logStackTrace: function(stack) {
+			var fmt = [];
+			stack = stack.slice(4);
+			for(var x=0, l=stack.length; x<l; x++) {
+				fmt.push('<div class="dung_sl"><div class="dung_sf">'+stack[x].func+'</div> <div class="dung_args">'+this.formatObject(stack[x].args)+'</div></div>');
 			}
-			this.elements.console.html(this.elements.console.html() + '<div class="console_response"><span class="'+(wrapclass || 'dung_log_message')+'">'+str+'</span></div>');
+			this.addToConsole(['<div class="dung_sh">Stack Trace:</div>'+fmt.join('')], 'dung_stack', true);
+		},
+		addToConsole: function(args, wrapclass, verbatim) {
+			var str = '';
+			if(verbatim === true) {
+				str = Array.prototype.slice.call(args).join('<br />');
+			} else {
+				for(var x=0, l=args.length; x<l; x++) {
+					str += this.formatObject(args[x])+' ';
+				}
+			}
+			this.elements.console.html(this.elements.console.html() + '<div class="console_response '+(wrapclass ? wrapclass : '')+'">'+str+'</div>');
 			this.dung.toBottom(this.elements.console);
 		},
 		keyEvent: function(evt) {
@@ -1514,7 +1532,8 @@ window.dung_beetle = {
 		tab_offset: 140,
 		inspect_delay: 300,
 		my_site: 'http://andrewray.me/dung-beetle/index.html',
-		proxy_url: 'http://localhost:8585/'
+		proxy_url: 'http://localhost:8585/',
+		max_stack_size: 20
 	},
 	input: {
 		mouse: {x:1, y:1}
@@ -1602,7 +1621,7 @@ window.dung_beetle = {
 		this.input.mouse.x = evt.pageX;
 		this.input.mouse.y = evt.pageY;
 		if(this.dungstatus.color_hover) {
-			this.elements.color_hover.css({'left':(this.input.mouse.x+9)+'px', 'top':(this.input.mouse.y+9)+'px'});
+			this.elements.color_hover.css({left:(this.input.mouse.x+9)+'px', top:(this.input.mouse.y+9)+'px'});
 		}
 	},
 	toBottom: function(elem, time) {

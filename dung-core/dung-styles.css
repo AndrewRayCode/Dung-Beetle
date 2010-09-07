@@ -47,8 +47,8 @@
 .dung_header .dung_tab:hover {background:#fff;}
 .dung_header .dung_tab.dung_active {background:#fff; color:#883355; border-bottom:1px solid #fff; _height:24px;}
 .dung_color_view {height:30px; width:30px; border:1px solid #888; display:none; position:absolute; z-index:9999;}
+div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer; z-index:2;}
 div.dung_upsize:hover {cursor:pointer;}
-div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px; cursor:pointer;}
 .dung_close, .dung_updown, .dung_windowed {background:url(dung_sprite.gif) top left no-repeat; position:absolute; right:5px; top:5px; cursor:pointer; opacity:0.8; filter:alpha(opacity=80); height:15px; width:15px;}
 .dung_close:hover, .dung_updown:hover, .dung_windowed:hover {opacity:1; filter:alpha(opacity=100);}
 .dung_updown {background-position:0 -15px; right:41px;}
@@ -72,23 +72,32 @@ div.dung_upsize {height:15px; width:15px; position:absolute; top:1px; right:3px;
 
 /* Console display styles */
 .dung_beetle textarea {font-size:8.5pt; width:790px; height:15px; bottom:2px; left:12px; border:1px solid #aaa; margin:0; padding:0; position:absolute;font-family:Courier new, serif;}
-.dung_cursor {width:10px; height:15px; bottom:2px; left:2px; color:#660033; border:1px solid #aaa; background:#fff; border-right:0 none; position:absolute; z-index:99999;}
-.dung_beetle .upsize {background:url(dung_sprite.gif) 0 -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
-.dung_beetle .upsize:hover {background-position:0 -60px;} 
-.dung_beetle .upsize:active {background-position:0 -75px;}
-.dung_beetle .downsize {background:url(dung_sprite.gif) -15px -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
-.dung_beetle .downsize:hover {background-position:-15px -60px;} 
-.dung_beetle .downsize:active {background-position:-15px -75px;}
+.dung_cursor {width:10px; height:15px; _height:17px; bottom:2px; left:2px; color:#660033; border:1px solid #aaa; background:#fff; border-right:0 none; position:absolute; z-index:99999;}
+.dung_beetle .dung_upsize {background:url(dung_sprite.gif) 0 -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
+.dung_beetle .dung_upsize:hover {background-position:0 -60px;} 
+.dung_beetle .dung_upsize:active {background-position:0 -75px;}
+.dung_beetle .dung_downsize {background:url(dung_sprite.gif) -15px -45px no-repeat scroll; width:15px; height:15px; bottom:2px; right:2px; top:auto !important; display:none; position:absolute;}
+.dung_beetle .dung_downsize:hover {background-position:-15px -60px;} 
+.dung_beetle .dung_downsize:active {background-position:-15px -75px;}
 .dung_console {border:1px solid #aaa; height:15px; bottom:18px; left:2px; width:800px; background:#fff; font-weight:bold; position:absolute; overflow:auto;}
+.dung_console .dung_function {color:#008800;}
 .dung_number {color:red;}
 .dung_string {color:#110088;}
 .dung_boolean {color:#44BB11;}
-.dung_function {color:#008800;}
 .dung_element {color:#660033;}
 .dung_other {color:brown;}
 .dung_obj_lbl {color:#660033; font-weight:bold;}
 .dung_obj_lbl.dung_sub_obj {color:#666;}
-.dung_error {color:#aa0000; background:#ffeeee;}
+.dung_error {color:#aa0000; background:#ffeeee; padding:5px;}
+.dung_error span {color:red !important !important;}
+.dung_stack {background:#ffffe0; width:100%; padding-left:24px; float:left; width:100%;}
+.dung_sh {background:#ffffe0; width:100%; text-decoration:underline; margin-bottom:5px;}
+.dung_stack .dung_line {color:orange; font-weight:bold;}
+.dung_stack .dung_loc {color:green; font-weight:bold;}
+.dung_stack .dung_sl {float:left; width:100%; clear:both;}
+.dung_stack .dung_sf {color:#008800; float:left; clear:both; height:1.5em;}
+.dung_stack .dung_sf:hover {cursor:pointer; text-decoration:underline;}
+.dung_stack .dung_args {float:left;}
 .console_response {border-bottom:1px solid #ddd;}
 .console_buttons {height:22px; bottom:2px; left:808px; border-top:1px solid #fff; background:#D7D9DE; position:absolute; width:200px; display:none;}
 .console_buttons span {text-align:center; border:1px outset #fff; background:#ddd; width:50px; height:15px; top:3px; position:absolute; display:block; font-family:Trebuchet MS, sans-serif;}
