@@ -21,7 +21,6 @@ window.dung_beetle = {
 		var me = this;
 		// Only supported by FireFox and IE, not Webit or Opera
 		window.onerror = this.bind(this.trapError, this);
-		this.jq(window).bind('error', this.bind(this.console.trace, this.console));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
@@ -783,7 +782,7 @@ window.dung_beetle = {
 	trapError: function(evt, url, linenumber) {
 		this.lasterrordata = {msg: evt, url: url, line: linenumber};
 		console.error(this.lasterrordata.msg+': '+this.lasterrordata.url+' on line: '+this.lasterrordata.line);
-		console.trace();
+		console.trace({onerror:true});
 
 		if(this.settings.trap_errors) {
 			return true;
@@ -946,9 +945,9 @@ window.dung_beetle = {
 
 			this.trace.implementation = function() {};
 			this.trace.implementation.prototype = {
-				run: function(ex) {
+				run: function(ex, slice) {
 					var mode = this.mode();
-					mode = 'other';
+					this.slice = slice;
 					if (mode === 'other') {
 						return this.other(arguments.callee);
 					} else {
@@ -989,10 +988,13 @@ window.dung_beetle = {
 							split("\n");
 				},
 				firefox: function(e) {
-					var s = [], stack = e.stack.split('\n');
-					var l = stack.length;
+					var s = [], stack = e.stack.split('\n'), l = stack.length, fnre = /^([^\(@]*)?(\((([^\)]*))\))?/, locre = /@(.*):/, m;
 					while(l--) {
-						stack[l] = {func:stack[l], args:['hi']};
+						if(stack[l]) {
+							console.log(stack[l]);
+							m = stack[l].match(fnre);
+							stack[l] = {func:m[1], args:m[3] ? m[3].split(/, ?/) : false, loc:stack[l].match(locre)[0], line:stack[l].substring(stack[l].indexOf(':'))};
+						}
 					}
 /*
 					return e.stack.replace(/^.*?\n/, '').
@@ -1000,7 +1002,7 @@ window.dung_beetle = {
 							replace(/^\(/gm, '{anonymous}(').
 							split("\n");
 							*/
-					return stack;
+					return stack.slice(3);
 				},
 				// Opera 7.x and 8.x only!
 				opera: function(e) {
@@ -1021,7 +1023,6 @@ window.dung_beetle = {
 				// Safari, Opera 9+, IE, and others
 				other: function(curr) {
 					var fnRE = /function\s*([\w\-$]+)?\s*\([^)]*?\)/i, stack = [], j = 0, fn, args;
-					stack = stack.slice(4);
 					
 					while (curr && stack.length < dung_beetle.settings.max_stack_size) {
 						stack[j++] = {func:curr.toString().match(fnRE)[0], args:Array.prototype.slice.call(curr.arguments)};
@@ -1030,22 +1031,9 @@ window.dung_beetle = {
 							break;
 						}
 						curr = curr.caller;
-
-
-
-
-						/*fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
-						args = Array.prototype.slice.call(curr['arguments']);
-						stack[j++] = fn + '(' + console.formatObject(args) + ')';
-						
-						//Opera bug: if curr.caller does not exist, Opera returns curr (WTF)
-						if (curr === curr.caller && window.opera) {
-							//TODO: check for same arguments if possible
-							break;
-						}
-						*/
 					}
-					return stack;
+					// this.slice means we are in window.onerror, so take those two calls off the stack
+					return stack.slice(this.slice ? 4 : 2);
 				},
 				stringifyArguments: function(args) {
 					for (var i = 0; i < args.length; ++i) {
@@ -1098,50 +1086,6 @@ window.dung_beetle = {
 						this.sourceCache[url] = this.ajax(url).split("\n");
 					}
 					return this.sourceCache[url];
-				},
-				guessFunctions: function(stack) {
-					for (var i = 0; i < stack.length; ++i) {
-						var reStack = /{anonymous}\(.*\)@(\w+:\/\/([-\w\.]+)+(:\d+)?[^:]+):(\d+):?(\d+)?/;
-						var frame = stack[i], m = reStack.exec(frame);
-						if (m) {
-							var file = m[1], lineno = m[4]; //m[7] is character position in Chrome
-							if (file && lineno) {
-								var functionName = this.guessFunctionName(file, lineno);
-								stack[i] = frame.replace('{anonymous}', functionName);
-							}
-						}
-					}
-					return stack;
-				},
-				guessFunctionName: function(url, lineNo) {
-					try {
-						return this.guessFunctionNameFromLines(lineNo, this.getSource(url));
-					} catch (e) {
-						return 'getSource failed with url: ' + url + ', exception: ' + e.toString();
-					}
-				},
-				guessFunctionNameFromLines: function(lineNo, source) {
-					var reFunctionArgNames = /function ([^(]*)\(([^)]*)\)/;
-					var reGuessFunction = /['"]?([0-9A-Za-z_]+)['"]?\s*[:=]\s*(function|eval|new Function)/;
-					// Walk backwards from the first line in the function until we find the line which
-					// matches the pattern above, which is the function definition
-					var line = "", maxLines = 10;
-					for (var i = 0; i < maxLines; ++i) {
-						line = source[lineNo - i] + line;
-						if (line !== undefined) {
-							var m = reGuessFunction.exec(line);
-							if (m) {
-								return m[1];
-							}
-							else {
-								m = reFunctionArgNames.exec(line);
-							}
-							if (m && m[1]) {
-								return m[1];
-							}
-						}
-					}
-					return "(?)";
 				}
 			};
 			this.history_position = 0;
@@ -1158,6 +1102,9 @@ window.dung_beetle = {
 		},
 		logStackTrace: function(stack) {
 			var fmt = [];
+			if(stack.length == 0) {
+				return;
+			}
 			for(var x=0, l=stack.length; x<l; x++) {
 				fmt.push('<div class="dung_sl"><div class="dung_sf">'+stack[x].func+'</div> <div class="dung_args">'+this.formatObject(stack[x].args)+'</div></div>');
 			}
@@ -1275,11 +1222,10 @@ window.dung_beetle = {
 			if(options && options.stack) {
 				ex = options;
 			}
-			var guess = (options && options.guess) ? options.guess : false;
-			
-			var p = new this.trace.implementation();
-			var result = p.run(ex);
-			console.logStackTrace((guess) ? p.guessFunctions(result) : result);
+			if(options && options.context) {
+				ex = options.context;
+			}
+			console.logStackTrace(new this.trace.implementation().run(ex, options ? options.onerror : false));
 		},
 		MODES: {
 			INSET: 1,		// Inset one-line

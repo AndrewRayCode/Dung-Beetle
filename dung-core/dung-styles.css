@@ -95,7 +95,7 @@ div.dung_upsize:hover {cursor:pointer;}
 .dung_stack .dung_line {color:orange; font-weight:bold;}
 .dung_stack .dung_loc {color:green; font-weight:bold;}
 .dung_stack .dung_sl {float:left; width:100%; clear:both;}
-.dung_stack .dung_sf {color:#008800; float:left; clear:both; height:1.5em;}
+.dung_stack .dung_sf {color:#008800; float:left; clear:both; line-height:1.5em;}
 .dung_stack .dung_sf:hover {cursor:pointer; text-decoration:underline;}
 .dung_stack .dung_args {float:left;}
 .console_response {border-bottom:1px solid #ddd;}
