@@ -21,7 +21,7 @@ window.dung_beetle = {
 		var me = this;
 		// Only supported by FireFox and IE, not Webit or Opera
 		window.onerror = this.bind(this.trapError, this);
-		this.jq(window).bind('error', this.bind(this.console.printStackTrace, this.console));
+		this.jq(window).bind('error', this.bind(this.console.trace, this.console));
 
 		this.elements.overlay = this.jq('<div></div>').attr('class', 'dung_overlay').appendTo('body');
 		this.elements.padding = {
@@ -96,7 +96,6 @@ window.dung_beetle = {
 
 		this.initted = true;
 		this.setMode(this.console.MODES.INSET, false);
-		this.stick();
 	},
 	toggleUpsize: function() {
 		if(this.console.mode == this.console.MODES.FULL) {
@@ -784,7 +783,7 @@ window.dung_beetle = {
 	trapError: function(evt, url, linenumber) {
 		this.lasterrordata = {msg: evt, url: url, line: linenumber};
 		console.error(this.lasterrordata.msg+': '+this.lasterrordata.url+' on line: '+this.lasterrordata.line);
-		console.printStackTrace();
+		console.trace();
 
 		if(this.settings.trap_errors) {
 			return true;
@@ -945,10 +944,11 @@ window.dung_beetle = {
 				}
 			}
 
-			this.printStackTrace.implementation = function() {};
-			this.printStackTrace.implementation.prototype = {
+			this.trace.implementation = function() {};
+			this.trace.implementation.prototype = {
 				run: function(ex) {
 					var mode = this.mode();
+					mode = 'other';
 					if (mode === 'other') {
 						return this.other(arguments.callee);
 					} else {
@@ -989,7 +989,6 @@ window.dung_beetle = {
 							split("\n");
 				},
 				firefox: function(e) {
-					alert(e.stack);
 					var s = [], stack = e.stack.split('\n');
 					var l = stack.length;
 					while(l--) {
@@ -1243,7 +1242,7 @@ window.dung_beetle = {
 				for(var x=0; x<obj.length; x++) {
 					str += this.formatObject(obj[x], depth)+', ';
 				}
-				str = str.substring(0, str.length-2)+'] ';
+				str = (str.length > 1 ? str.substring(0, str.length-2) : str)+'] ';
 			} else if(type == 'object') {
 				var i = 0;
 				var formats = [];
@@ -1271,14 +1270,14 @@ window.dung_beetle = {
 			return str;
 		},
 		// See licenses.txt or http://github.com/emwendelin/javascript-stacktrace for license information. Removed from source for brevity
-		printStackTrace: function(options) {
+		trace: function(options) {
 			var ex = (options && options.e) ? options.e : null;
 			if(options && options.stack) {
 				ex = options;
 			}
 			var guess = (options && options.guess) ? options.guess : false;
 			
-			var p = new this.printStackTrace.implementation();
+			var p = new this.trace.implementation();
 			var result = p.run(ex);
 			console.logStackTrace((guess) ? p.guessFunctions(result) : result);
 		},
